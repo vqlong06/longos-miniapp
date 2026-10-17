@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>LongOS 2D Dashboard</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #090D16;
+      --card-bg: #121A2D;
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #F1F5F9;
+      --text-sub: #94A3B8;
+      --cyan: #06B6D4;
+      --emerald: #10B981;
+      --rose: #F43F5E;
+      --amber: #F59E0B;
+      --purple: #8B5CF6;
+      --accent: #38BDF8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: 16px;
+      padding-bottom: 40px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #38BDF8, #818CF8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .btn-refresh {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--accent);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .grid-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 12px;
+      text-align: center;
+    }
+    .stat-title { font-size: 11px; color: var(--text-sub); text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
+    .stat-val { font-size: 15px; font-weight: 700; color: var(--text-main); }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .card-title .icon-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--cyan);
+    }
+    .progress-bar-bg {
+      background: rgba(255, 255, 255, 0.08);
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #10B981, #06B6D4);
+      transition: width 0.5s ease;
+    }
+    .budget-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .list-item:last-child { border-bottom: none; }
+    .item-left { display: flex; align-items: center; gap: 10px; }
+    .item-icon { font-size: 18px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.05); border-radius: 8px; }
+    .item-name { font-size: 14px; font-weight: 600; }
+    .item-sub { font-size: 11px; color: var(--text-sub); }
+    .item-amt { font-size: 14px; font-weight: 700; text-align: right; }
+    .env-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .env-box {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 12px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .env-val { font-size: 18px; font-weight: 700; }
+    .env-label { font-size: 11px; color: var(--text-sub); }
+    .loading { text-align: center; padding: 40px; color: var(--text-sub); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">
+      <span>⚡</span> LongOS 2D Dashboard
+    </div>
+    <button class="btn-refresh" id="refreshBtn">🔄 Làm mới</button>
+  </div>
+
+  <div id="content">
+    <div class="loading">Đang tải bảng điều khiển...</div>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      if (tg.setHeaderColor) tg.setHeaderColor('#090D16');
+      if (tg.setBackgroundColor) tg.setBackgroundColor('#090D16');
+    }
+
+    const fmtVnd = n => Number(n || 0).toLocaleString('vi-VN') + ' đ';
+
+    async function loadData() {
+      const container = document.getElementById('content');
+      try {
+        const res = await fetch('https://ucgbvsmxljilmgrdfazk.supabase.co/functions/v1/room-telegram?action=dashboard_data');
+        const data = await res.json();
+        render(data);
+      } catch (err) {
+        container.innerHTML = '<div class="loading" style="color:var(--rose)">Không thể tải dữ liệu: ' + err.message + '</div>';
+      }
+    }
+
+    function render(data) {
+      const { finances, subscriptions, reminders, room, health } = data;
+      const budget = finances.budget;
+      const pct = Math.min(100, Math.round(budget.percent || 0));
+      const barColor = pct >= 80 ? 'linear-gradient(90deg, #F59E0B, #F43F5E)' : 'linear-gradient(90deg, #10B981, #06B6D4)';
+
+      let html = '';
+
+      // 1. Stats Bar
+      html += `
+        <div class="grid-stats">
+          <div class="stat-card">
+            <div class="stat-title">Hôm nay</div>
+            <div class="stat-val">${fmtVnd(finances.today)}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">Tuần này</div>
+            <div class="stat-val">${fmtVnd(finances.thisWeek)}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">Tháng này</div>
+            <div class="stat-val">${fmtVnd(finances.thisMonth)}</div>
+          </div>
+        </div>
+      `;
+
+      // 2. Monthly Budget Card
+      if (budget.hasBudget) {
+        html += `
+          <div class="card">
+            <div class="card-title">
+              <span class="icon-tag">🎯 Ngân sách Tháng</span>
+              <span class="badge" style="background:${pct >= 80 ? 'rgba(244,63,94,0.15)' : 'rgba(16,185,129,0.15)'};color:${pct >= 80 ? 'var(--rose)' : 'var(--emerald)'}">${pct}%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width:${pct}%;background:${barColor}"></div>
+            </div>
+            <div class="budget-meta">
+              <span>Đã chi: ${fmtVnd(budget.spent)}</span>
+              <span>Hạn mức: ${fmtVnd(budget.amount)}</span>
+            </div>
+            <div class="budget-meta" style="margin-top:6px;">
+              <span>Còn lại: ${fmtVnd(budget.remaining)}</span>
+              <span>An toàn: ${fmtVnd(budget.safeDaily)}/ngày</span>
+            </div>
+          </div>
+        `;
+      }
+
+      // 3. Subscriptions Card
+      html += `
+        <div class="card">
+          <div class="card-title">
+            <span class="icon-tag">🔁 Thuê Bao Định Kỳ</span>
+            <span class="badge">${fmtVnd(subscriptions.totalMonthly)}/tháng</span>
+          </div>
+      `;
+      if (!subscriptions.items || subscriptions.items.length === 0) {
+        html += '<div style="color:var(--text-sub);font-size:13px;padding:8px 0;">Chưa có gói thuê bao nào được lưu.</div>';
+      } else {
+        subscriptions.items.forEach(s => {
+          const badgeColor = s.daysLeft <= 2 ? 'var(--rose)' : 'var(--cyan)';
+          html += `
+            <div class="list-item">
+              <div class="item-left">
+                <div class="item-icon">📦</div>
+                <div>
+                  <div class="item-name">${s.name}</div>
+                  <div class="item-sub">Ngày ${String(s.paymentDay).padStart(2, '0')} hàng tháng · <span style="color:${badgeColor}">${s.dueText}</span></div>
+                </div>
+              </div>
+              <div class="item-amt">${fmtVnd(s.amount)}</div>
+            </div>
+          `;
+        });
+      }
+      html += '</div>';
+
+      // 4. Reminders Card
+      html += `
+        <div class="card">
+          <div class="card-title">
+            <span class="icon-tag">📋 Việc Cần Làm</span>
+            <span class="badge" style="background:rgba(139,92,246,0.15);color:var(--purple)">Đã xong: ${reminders.completedTodayCount}</span>
+          </div>
+      `;
+      if (!reminders.pending || reminders.pending.length === 0) {
+        html += '<div style="color:var(--text-sub);font-size:13px;padding:8px 0;">Không có việc nào đang chờ 🎉</div>';
+      } else {
+        reminders.pending.forEach(r => {
+          html += `
+            <div class="list-item">
+              <div class="item-left">
+                <div class="item-icon" style="color:var(--emerald)">✓</div>
+                <div>
+                  <div class="item-name">${r.task}</div>
+                  <div class="item-sub">${r.repeat ? 'Lặp: ' + r.repeat : 'Lời nhắc'}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      }
+      html += '</div>';
+
+      // 5. Room & Health Card
+      html += `
+        <div class="card">
+          <div class="card-title">
+            <span class="icon-tag">🏠 Phòng & Sức Khỏe</span>
+            <span class="badge" style="background:rgba(16,185,129,0.15);color:var(--emerald)">${room.comfort}</span>
+          </div>
+          <div class="env-grid">
+            <div class="env-box">
+              <span style="font-size:22px;">🌡️</span>
+              <div>
+                <div class="env-val">${room.temperature}°C</div>
+                <div class="env-label">Nhiệt độ phòng</div>
+              </div>
+            </div>
+            <div class="env-box">
+              <span style="font-size:22px;">💧</span>
+              <div>
+                <div class="env-val">${room.humidity}%</div>
+                <div class="env-label">Độ ẩm không khí</div>
+              </div>
+            </div>
+            <div class="env-box">
+              <span style="font-size:22px;">🔋</span>
+              <div>
+                <div class="env-val">${health.bodyBattery}%</div>
+                <div class="env-label">Pin thể chất</div>
+              </div>
+            </div>
+            <div class="env-box">
+              <span style="font-size:22px;">😴</span>
+              <div>
+                <div class="env-val">${health.sleepFormatted}</div>
+                <div class="env-label">Giấc ngủ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('content').innerHTML = html;
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      document.getElementById('content').innerHTML = '<div class="loading">Đang làm mới...</div>';
+      loadData();
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
