@@ -9,7 +9,9 @@
     :root {
       --bg: #090D16;
       --card-bg: #121A2D;
+      --card-sub: #16223B;
       --card-border: rgba(255, 255, 255, 0.08);
+      --card-border-glow: rgba(56, 189, 248, 0.25);
       --text-main: #F1F5F9;
       --text-sub: #94A3B8;
       --cyan: #06B6D4;
@@ -17,267 +19,1551 @@
       --rose: #F43F5E;
       --amber: #F59E0B;
       --purple: #8B5CF6;
+      --indigo: #6366F1;
       --accent: #38BDF8;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
     body {
       background-color: var(--bg);
       color: var(--text-main);
-      padding: 16px;
-      padding-bottom: 40px;
+      padding-top: calc(max(env(safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), 20px) + 36px);
+      padding-left: calc(max(env(safe-area-inset-left, 0px), var(--tg-safe-area-inset-left, 0px), var(--tg-content-safe-area-inset-left, 0px)) + 16px);
+      padding-right: calc(max(env(safe-area-inset-right, 0px), var(--tg-safe-area-inset-right, 0px), var(--tg-content-safe-area-inset-right, 0px)) + 16px);
+      padding-bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 0px), 20px) + 72px);
       -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
     }
+
+    /* Privacy Blur Mode */
+    .privacy-active .privacy-blur {
+      filter: blur(7px);
+      user-select: none;
+      transition: filter 0.2s ease;
+    }
+
+    /* Header */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     .brand {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 19px;
+      font-weight: 800;
       letter-spacing: -0.5px;
       background: linear-gradient(135deg, #38BDF8, #818CF8);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    .btn-refresh {
+    .brand-sub {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--cyan);
+      background: rgba(6, 182, 212, 0.12);
+      padding: 2px 7px;
+      border-radius: 8px;
+      border: 1px solid rgba(6, 182, 212, 0.2);
+    }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .icon-btn {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      color: var(--accent);
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
+      color: var(--text-sub);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
-      gap: 4px;
+      justify-content: center;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
     }
-    .grid-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 16px;
+    .icon-btn:active {
+      transform: scale(0.92);
+      border-color: var(--accent);
+      color: var(--accent);
     }
-    .stat-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 14px;
-      padding: 12px;
-      text-align: center;
+    .icon-btn.active {
+      color: var(--amber);
+      border-color: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.1);
     }
-    .stat-title { font-size: 11px; color: var(--text-sub); text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
-    .stat-val { font-size: 15px; font-weight: 700; color: var(--text-main); }
+
+    /* Cards */
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 16px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      position: relative;
+      overflow: hidden;
     }
     .card-title {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
       margin-bottom: 12px;
+      letter-spacing: -0.2px;
     }
     .card-title .icon-tag {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
     }
     .badge {
       font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 10px;
+      padding: 3px 9px;
+      border-radius: 12px;
       font-weight: 600;
-      background: rgba(6, 182, 212, 0.15);
-      color: var(--cyan);
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.2);
     }
-    .progress-bar-bg {
-      background: rgba(255, 255, 255, 0.08);
-      height: 8px;
-      border-radius: 4px;
-      overflow: hidden;
-      margin: 10px 0;
-    }
-    .progress-bar-fill {
-      height: 100%;
-      border-radius: 4px;
-      background: linear-gradient(90deg, #10B981, #06B6D4);
-      transition: width 0.5s ease;
-    }
-    .budget-meta {
+
+    /* Tab 1: Top Activity Rings Widget */
+    .rings-card {
       display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 16px;
+      background: linear-gradient(145deg, #121A2D, #0E1626);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+    .rings-svg-wrap {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      flex-shrink: 0;
+    }
+    .rings-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    .ring-bg {
+      fill: none;
+      stroke-width: 7;
+      opacity: 0.15;
+    }
+    .ring-val {
+      fill: none;
+      stroke-width: 7;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .rings-center {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .rings-score {
+      font-size: 20px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-main);
+      line-height: 1;
+    }
+    .rings-score-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--cyan);
+      margin-top: 2px;
+    }
+    .rings-legend {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
       justify-content: space-between;
       font-size: 12px;
+    }
+    .legend-dot-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       color: var(--text-sub);
     }
-    .list-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
     }
-    .list-item:last-child { border-bottom: none; }
-    .item-left { display: flex; align-items: center; gap: 10px; }
-    .item-icon { font-size: 18px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.05); border-radius: 8px; }
-    .item-name { font-size: 14px; font-weight: 600; }
-    .item-sub { font-size: 11px; color: var(--text-sub); }
-    .item-amt { font-size: 14px; font-weight: 700; text-align: right; }
-    .env-grid {
+    .legend-val {
+      font-weight: 700;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Jarvis Briefing Card */
+    .jarvis-card {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(18, 26, 45, 0.9));
+      border: 1px solid rgba(129, 140, 248, 0.25);
+      position: relative;
+    }
+    .jarvis-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .jarvis-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #818CF8, #38BDF8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .jarvis-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #A5B4FC;
+    }
+    .jarvis-body {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-main);
+      margin-bottom: 10px;
+    }
+    .jarvis-action-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      cursor: pointer;
+    }
+    .jarvis-action-pill:active {
+      transform: scale(0.97);
+    }
+
+    /* Quick Stats Grid */
+    .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 10px;
+      margin-bottom: 14px;
     }
-    .env-box {
-      background: rgba(255, 255, 255, 0.03);
+    .quick-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
       padding: 12px;
-      border-radius: 12px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .env-val { font-size: 18px; font-weight: 700; }
-    .env-label { font-size: 11px; color: var(--text-sub); }
-    .loading { text-align: center; padding: 40px; color: var(--text-sub); font-size: 14px; }
+    .quick-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    .quick-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .quick-val {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Tab 2: Money Tab Hero & Pacing */
+    .money-hero {
+      text-align: center;
+      padding: 20px 16px;
+      background: radial-gradient(circle at top, rgba(245, 158, 11, 0.12) 0%, rgba(18, 26, 45, 0.6) 80%);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .money-hero-sub {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--amber);
+      margin-bottom: 6px;
+    }
+    .money-hero-val {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -1px;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 8px;
+    }
+    .money-hero-desc {
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    /* Pacing Budget Bar */
+    .pacing-track {
+      position: relative;
+      height: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      overflow: visible;
+      margin: 14px 0 10px 0;
+    }
+    .pacing-fill {
+      height: 100%;
+      border-radius: 8px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .pacing-notch {
+      position: absolute;
+      top: -4px;
+      width: 3px;
+      height: 22px;
+      background: #FFFFFF;
+      border-radius: 2px;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+      z-index: 2;
+    }
+    .pacing-notch-label {
+      position: absolute;
+      top: 22px;
+      transform: translateX(-50%);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-sub);
+      white-space: nowrap;
+    }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-top: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Unclassified Pending Inbox */
+    .inbox-card {
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      background: linear-gradient(145deg, #182236, #121A2D);
+    }
+    .inbox-item {
+      background: var(--card-sub);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .inbox-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .inbox-item-desc {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .inbox-item-amt {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--amber);
+      font-variant-numeric: tabular-nums;
+    }
+    .inbox-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .chip-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+    .chip-btn:active {
+      transform: scale(0.94);
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--accent);
+    }
+
+    /* Heatmap Grid (GitHub style) */
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-top: 10px;
+    }
+    .heat-cell {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      background: #141D30;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-sub);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      position: relative;
+    }
+    .heat-cell.today {
+      border: 1px solid var(--accent);
+    }
+    .heat-cell.level-1 { background: rgba(245, 158, 11, 0.25); color: #FCD34D; }
+    .heat-cell.level-2 { background: rgba(245, 158, 11, 0.55); color: #FFFFFF; font-weight: 800; }
+    .heat-cell.level-3 { background: rgba(244, 63, 94, 0.85); color: #FFFFFF; font-weight: 800; }
+
+    /* SVG Donut & Charts */
+    .donut-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .donut-svg {
+      width: 100px;
+      height: 100px;
+      flex-shrink: 0;
+      transform: rotate(-90deg);
+    }
+    .cat-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .cat-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+
+    /* Tab 3: Sleep Stages Stacked Bar */
+    .sleep-bar-wrap {
+      height: 24px;
+      border-radius: 8px;
+      display: flex;
+      overflow: hidden;
+      margin: 12px 0 8px 0;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .sleep-seg {
+      height: 100%;
+      position: relative;
+    }
+    .sleep-seg.deep { background: var(--indigo); }
+    .sleep-seg.rem { background: var(--cyan); }
+    .sleep-seg.core { background: var(--purple); }
+    .sleep-seg.awake { background: var(--amber); }
+
+    /* HRV / RHR Baseline Track */
+    .baseline-track {
+      position: relative;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      margin: 14px 0 8px 0;
+    }
+    .baseline-band {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      background: rgba(16, 185, 129, 0.3);
+      border-radius: 6px;
+      border: 1px dashed rgba(16, 185, 129, 0.6);
+    }
+    .baseline-pointer {
+      position: absolute;
+      top: -5px;
+      width: 8px;
+      height: 20px;
+      background: #FFFFFF;
+      border-radius: 4px;
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+      transform: translateX(-50%);
+    }
+
+    /* List items */
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .list-item:last-child {
+      border-bottom: none;
+    }
+    .item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .item-icon {
+      font-size: 16px;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .item-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .item-sub {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+    .item-amt {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Bottom Tab Bar */
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(56px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 0px)));
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 0px));
+      background: rgba(18, 26, 45, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--card-border);
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      z-index: 100;
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-sub);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-item .tab-icon {
+      font-size: 18px;
+      margin-bottom: 2px;
+      transition: transform 0.15s;
+    }
+    .tab-item.active {
+      color: var(--accent);
+    }
+    .tab-item.active .tab-icon {
+      transform: scale(1.15);
+    }
+
+    /* Floating Action Button (+) */
+    .fab {
+      position: fixed;
+      bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 0px)) + 68px);
+      right: 16px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #38BDF8, #6366F1);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 300;
+      box-shadow: 0 4px 18px rgba(56, 189, 248, 0.4);
+      cursor: pointer;
+      z-index: 99;
+      border: none;
+      transition: transform 0.2s;
+    }
+    .fab:active {
+      transform: scale(0.9);
+    }
+
+    /* Modal Sheet */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-sheet {
+      background: #121A2D;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px 24px 0 0;
+      padding: 20px 16px calc(24px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px))) 16px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .input-group {
+      margin-bottom: 14px;
+    }
+    .input-label {
+      font-size: 12px;
+      color: var(--text-sub);
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .input-box {
+      width: 100%;
+      background: var(--card-sub);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px;
+      color: var(--text-main);
+      font-size: 15px;
+      outline: none;
+    }
+    .input-box:focus {
+      border-color: var(--accent);
+    }
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, #38BDF8, #6366F1);
+      border: none;
+      color: #FFFFFF;
+      padding: 13px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn-submit:active {
+      transform: scale(0.98);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-sub);
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
+  <!-- Header -->
   <div class="header">
     <div class="brand">
-      <span>⚡</span> LongOS 2D Dashboard
+      <span>LongOS</span>
+      <span class="brand-sub">2D HUD</span>
     </div>
-    <button class="btn-refresh" id="refreshBtn">🔄 Làm mới</button>
+    <div class="header-actions">
+      <button class="icon-btn" id="privacyBtn" title="Chế độ riêng tư (che tiền)">👁️</button>
+      <button class="icon-btn" id="refreshBtn" title="Làm mới">↻</button>
+    </div>
   </div>
 
+  <!-- Main Dynamic View Container -->
   <div id="content">
-    <div class="loading">Đang tải bảng điều khiển...</div>
+    <div class="loading">Đang kết nối LongOS Core...</div>
+  </div>
+
+  <!-- Floating Quick Entry Button (+) -->
+  <button class="fab" id="fabBtn" title="Nhập nhanh">+</button>
+
+  <!-- Bottom Navigation Bar -->
+  <div class="tab-bar">
+    <div class="tab-item active" data-tab="today">
+      <div class="tab-icon">🏠</div>
+      <div>Hôm nay</div>
+    </div>
+    <div class="tab-item" data-tab="money">
+      <div class="tab-icon">💸</div>
+      <div>Tiền</div>
+    </div>
+    <div class="tab-item" data-tab="health">
+      <div class="tab-icon">🩺</div>
+      <div>Sức khỏe</div>
+    </div>
+    <div class="tab-item" data-tab="room">
+      <div class="tab-icon">🚪</div>
+      <div>Phòng</div>
+    </div>
+    <div class="tab-item" data-tab="tasks">
+      <div class="tab-icon">📋</div>
+      <div>Việc</div>
+    </div>
+  </div>
+
+  <!-- Quick Entry Modal Overlay -->
+  <div class="modal-overlay" id="quickModal">
+    <div class="modal-sheet">
+      <div class="modal-title">
+        <span>⚡ Nhập Nhanh</span>
+        <span style="cursor:pointer;font-size:20px;" id="closeModalBtn">✕</span>
+      </div>
+      <div class="grid-2" style="margin-bottom:14px;">
+        <button class="chip-btn" id="quickWaterBtn" style="padding:10px;justify-content:center;">💧 +250ml Nước</button>
+        <button class="chip-btn" id="quickFocusBtn" style="padding:10px;justify-content:center;">🎯 Focus 25m</button>
+      </div>
+      <div class="input-group">
+        <label class="input-label">💸 Thêm Khoản Chi</label>
+        <input type="number" class="input-box" id="quickAmt" placeholder="Số tiền (VD: 45000)">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Danh Mục</label>
+        <div class="inbox-chips" id="quickCatChips">
+          <button class="chip-btn active" data-cat="food">🍽 Ăn uống</button>
+          <button class="chip-btn" data-cat="transport">🚗 Đi lại</button>
+          <button class="chip-btn" data-cat="shopping">🛍 Mua sắm</button>
+          <button class="chip-btn" data-cat="bills">💡 Sinh hoạt</button>
+          <button class="chip-btn" data-cat="entertainment">🎉 Giải trí</button>
+          <button class="chip-btn" data-cat="other">📝 Khác</button>
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Nội Dung / Ghi Chú</label>
+        <input type="text" class="input-box" id="quickNote" placeholder="VD: Cơm trưa, Cà phê">
+      </div>
+      <button class="btn-submit" id="saveExpenseBtn">Lưu Chi Tiêu</button>
+
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:18px 0;">
+
+      <div class="input-group">
+        <label class="input-label">📋 Thêm Việc Cần Làm</label>
+        <input type="text" class="input-box" id="quickTaskInput" placeholder="VD: Nộp báo cáo lúc 17h">
+      </div>
+      <button class="btn-submit" id="saveTaskBtn" style="background:#8B5CF6;">Lưu Việc Mới</button>
+    </div>
   </div>
 
   <script>
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
+    const isLocalOrGh = window.location.hostname === 'localhost' || window.location.hostname.includes('github.io');
+    const API_URL = isLocalOrGh
+      ? 'https://ucgbvsmxljilmgrdfazk.supabase.co/functions/v1/room-telegram?action=dashboard_data'
+      : '?action=dashboard_data';
+    const ACTION_URL = isLocalOrGh
+      ? 'https://ucgbvsmxljilmgrdfazk.supabase.co/functions/v1/room-telegram?action=dashboard_action'
+      : '?action=dashboard_action';
+
+    let dashboardData = null;
+    let currentTab = 'today';
+    let isPrivacy = localStorage.getItem('longos_privacy') === 'true';
+
+    // Format VND
+    function fmtVnd(num) {
+      if (num === null || num === undefined) return '-- đ';
+      return Math.round(num).toLocaleString('vi-VN') + ' đ';
+    }
+
+    // Initialize Telegram WebApp
+    if (window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
       tg.ready();
       tg.expand();
       if (tg.setHeaderColor) tg.setHeaderColor('#090D16');
       if (tg.setBackgroundColor) tg.setBackgroundColor('#090D16');
+
+      // Safe area padding fallback
+      const topInset = tg.contentSafeAreaInset?.top || tg.safeAreaInset?.top || 0;
+      if (topInset > 0) {
+        document.body.style.paddingTop = `calc(${topInset}px + 20px)`;
+      }
+
+      tg.BackButton.onClick(() => {
+        if (currentTab !== 'today') {
+          switchTab('today');
+        }
+      });
     }
 
-    const fmtVnd = n => Number(n || 0).toLocaleString('vi-VN') + ' đ';
-
-    async function loadData() {
-      const container = document.getElementById('content');
-      try {
-        const res = await fetch('https://ucgbvsmxljilmgrdfazk.supabase.co/functions/v1/room-telegram?action=dashboard_data');
-        const data = await res.json();
-        render(data);
-      } catch (err) {
-        container.innerHTML = '<div class="loading" style="color:var(--rose)">Không thể tải dữ liệu: ' + err.message + '</div>';
+    function updateBackButton() {
+      if (window.Telegram?.WebApp?.BackButton) {
+        if (currentTab === 'today') {
+          window.Telegram.WebApp.BackButton.hide();
+        } else {
+          window.Telegram.WebApp.BackButton.show();
+        }
       }
     }
 
-    function render(data) {
-      const { finances, subscriptions, reminders, room, health } = data;
-      const budget = finances.budget;
-      const pct = Math.min(100, Math.round(budget.percent || 0));
-      const barColor = pct >= 80 ? 'linear-gradient(90deg, #F59E0B, #F43F5E)' : 'linear-gradient(90deg, #10B981, #06B6D4)';
+    // Toggle Privacy Mode
+    const privacyBtn = document.getElementById('privacyBtn');
+    function applyPrivacy() {
+      if (isPrivacy) {
+        document.body.classList.add('privacy-active');
+        privacyBtn.classList.add('active');
+      } else {
+        document.body.classList.remove('privacy-active');
+        privacyBtn.classList.remove('active');
+      }
+    }
+    privacyBtn.addEventListener('click', () => {
+      isPrivacy = !isPrivacy;
+      localStorage.setItem('longos_privacy', String(isPrivacy));
+      applyPrivacy();
+    });
+    applyPrivacy();
 
-      let html = '';
+    // Tab Navigation
+    document.querySelectorAll('.tab-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const tab = el.dataset.tab;
+        switchTab(tab);
+      });
+    });
 
-      // 1. Stats Bar
-      html += `
-        <div class="grid-stats">
-          <div class="stat-card">
-            <div class="stat-title">Hôm nay</div>
-            <div class="stat-val">${fmtVnd(finances.today)}</div>
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-item').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tab);
+      });
+      updateBackButton();
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+      }
+      if (dashboardData) render();
+    }
+
+    // Load Data
+    async function loadData() {
+      try {
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        dashboardData = await res.json();
+        render();
+      } catch (err) {
+        document.getElementById('content').innerHTML = `
+          <div class="loading" style="color:var(--rose)">
+            ⚠️ Không thể kết nối máy chủ: ${err.message}<br><br>
+            <button class="chip-btn" onclick="loadData()" style="margin:0 auto;">Thử lại</button>
           </div>
-          <div class="stat-card">
-            <div class="stat-title">Tuần này</div>
-            <div class="stat-val">${fmtVnd(finances.thisWeek)}</div>
+        `;
+      }
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      document.getElementById('content').innerHTML = '<div class="loading">Đang làm mới dữ liệu...</div>';
+      loadData();
+    });
+
+    // Post Action helper
+    async function postAction(body) {
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      }
+      try {
+        const res = await fetch(ACTION_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const resData = await res.json();
+        if (resData.ok) {
+          await loadData();
+          return true;
+        }
+      } catch (err) {
+        alert('Có lỗi xảy ra: ' + err.message);
+      }
+      return false;
+    }
+
+    // RENDER DISPATCHER
+    function render() {
+      if (!dashboardData) return;
+      if (currentTab === 'today') renderToday();
+      else if (currentTab === 'money') renderMoney();
+      else if (currentTab === 'health') renderHealth();
+      else if (currentTab === 'room') renderRoom();
+      else if (currentTab === 'tasks') renderTasks();
+    }
+
+    // 1. TAB HÔM NAY (OVERVIEW)
+    function renderToday() {
+      const { finances, health, room, reminders, briefing } = dashboardData;
+      const rings = health.rings;
+
+      // SVG Ring calculations
+      // Sleep ring (r=42, circumference=263.89)
+      const c1 = 263.89;
+      const off1 = c1 - (c1 * rings.sleep) / 100;
+      // Activity ring (r=30, circumference=188.50)
+      const c2 = 188.50;
+      const off2 = c2 - (c2 * rings.activity) / 100;
+      // Budget ring (r=18, circumference=113.10)
+      const c3 = 113.10;
+      const off3 = c3 - (c3 * rings.budget) / 100;
+
+      let html = `
+        <!-- Activity Rings Hero Widget -->
+        <div class="card rings-card">
+          <div class="rings-svg-wrap">
+            <svg class="rings-svg" viewBox="0 0 100 100">
+              <circle class="ring-bg" cx="50" cy="50" r="42" stroke="var(--purple)"></circle>
+              <circle class="ring-val" cx="50" cy="50" r="42" stroke="var(--purple)" stroke-dasharray="${c1}" stroke-dashoffset="${off1}"></circle>
+
+              <circle class="ring-bg" cx="50" cy="50" r="30" stroke="var(--cyan)"></circle>
+              <circle class="ring-val" cx="50" cy="50" r="30" stroke="var(--cyan)" stroke-dasharray="${c2}" stroke-dashoffset="${off2}"></circle>
+
+              <circle class="ring-bg" cx="50" cy="50" r="18" stroke="var(--amber)"></circle>
+              <circle class="ring-val" cx="50" cy="50" r="18" stroke="var(--amber)" stroke-dasharray="${c3}" stroke-dashoffset="${off3}"></circle>
+            </svg>
+            <div class="rings-center">
+              <div class="rings-score">${rings.overallScore}</div>
+              <div class="rings-score-label">Điểm Ngày</div>
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="stat-title">Tháng này</div>
-            <div class="stat-val">${fmtVnd(finances.thisMonth)}</div>
+          <div class="rings-legend">
+            <div class="legend-item">
+              <div class="legend-dot-label">
+                <span class="legend-dot" style="background:var(--purple);"></span>
+                <span>Giấc ngủ</span>
+              </div>
+              <div class="legend-val">${health.sleepFormatted}</div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot-label">
+                <span class="legend-dot" style="background:var(--cyan);"></span>
+                <span>Vận động</span>
+              </div>
+              <div class="legend-val">${health.steps.current.toLocaleString('vi-VN')} b</div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot-label">
+                <span class="legend-dot" style="background:var(--amber);"></span>
+                <span>Còn tiêu</span>
+              </div>
+              <div class="legend-val privacy-blur">${fmtVnd(finances.budget.todayRemaining)}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jarvis Companion Briefing -->
+        <div class="card jarvis-card">
+          <div class="jarvis-header">
+            <div class="jarvis-avatar">🤖</div>
+            <div class="jarvis-name">Jarvis · LongOS Companion</div>
+          </div>
+          <div class="jarvis-body">
+            <strong>${briefing.greeting}</strong><br>
+            ${briefing.advice}
+          </div>
+          <div class="jarvis-action-pill" onclick="handleJarvisAction()">
+            <span>⚡ Việc ưu tiên:</span>
+            <span>${briefing.priorityAction}</span>
+          </div>
+        </div>
+
+        <!-- Quick Glance Grid -->
+        <div class="grid-2">
+          <div class="quick-box" onclick="switchTab('money')" style="cursor:pointer;">
+            <div class="quick-icon">💰</div>
+            <div>
+              <div class="quick-title">Còn Tiêu Hôm Nay</div>
+              <div class="quick-val privacy-blur">${fmtVnd(finances.budget.todayRemaining)}</div>
+            </div>
+          </div>
+          <div class="quick-box" onclick="switchTab('health')" style="cursor:pointer;">
+            <div class="quick-icon">🔋</div>
+            <div>
+              <div class="quick-title">Pin Thể Chất</div>
+              <div class="quick-val">${health.bodyBattery}%</div>
+            </div>
+          </div>
+          <div class="quick-box" onclick="switchTab('room')" style="cursor:pointer;">
+            <div class="quick-icon">🌡️</div>
+            <div>
+              <div class="quick-title">Phòng (${room.comfort})</div>
+              <div class="quick-val">${room.temperature}°C · ${room.humidity}%</div>
+            </div>
+          </div>
+          <div class="quick-box" onclick="switchTab('tasks')" style="cursor:pointer;">
+            <div class="quick-icon">📋</div>
+            <div>
+              <div class="quick-title">Việc Cần Làm</div>
+              <div class="quick-val">${reminders.pending.length} việc</div>
+            </div>
           </div>
         </div>
       `;
 
-      // 2. Monthly Budget Card
-      if (budget.hasBudget) {
+      // Pending VCB Alert banner if exists
+      if (finances.unclassifiedExpenses && finances.unclassifiedExpenses.length > 0) {
         html += `
-          <div class="card">
-            <div class="card-title">
-              <span class="icon-tag">🎯 Ngân sách Tháng</span>
-              <span class="badge" style="background:${pct >= 80 ? 'rgba(244,63,94,0.15)' : 'rgba(16,185,129,0.15)'};color:${pct >= 80 ? 'var(--rose)' : 'var(--emerald)'}">${pct}%</span>
+          <div class="card inbox-card">
+            <div class="card-title" style="color:var(--amber);">
+              <span class="icon-tag">📬 ${finances.unclassifiedExpenses.length} Giao Dịch Chờ Phân Loại</span>
+              <span class="badge" style="background:rgba(245,158,11,0.2);color:var(--amber);cursor:pointer;" onclick="switchTab('money')">Xem tất cả</span>
             </div>
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill" style="width:${pct}%;background:${barColor}"></div>
-            </div>
-            <div class="budget-meta">
-              <span>Đã chi: ${fmtVnd(budget.spent)}</span>
-              <span>Hạn mức: ${fmtVnd(budget.amount)}</span>
-            </div>
-            <div class="budget-meta" style="margin-top:6px;">
-              <span>Còn lại: ${fmtVnd(budget.remaining)}</span>
-              <span>An toàn: ${fmtVnd(budget.safeDaily)}/ngày</span>
-            </div>
+            ${renderPendingItem(finances.unclassifiedExpenses[0])}
           </div>
         `;
       }
 
-      // 3. Subscriptions Card
-      html += `
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function handleJarvisAction() {
+      const p = dashboardData?.finances?.unclassifiedExpenses;
+      if (p && p.length > 0) switchTab('money');
+      else switchTab('tasks');
+    }
+
+    // 2. TAB TIỀN (MONEY & PACING)
+    function renderMoney() {
+      const { finances, subscriptions } = dashboardData;
+      const b = finances.budget;
+      const isZeroSpentToday = finances.today === 0;
+
+      // Pacing calculation
+      const spentPct = Math.min(100, Math.round(b.percent || 0));
+      const pacingPct = Math.min(100, Math.round(b.pacingPercent || 0));
+      const isUnderPacing = b.pacingDiff <= 0;
+      const pacingColor = isUnderPacing ? 'var(--emerald)' : 'var(--rose)';
+      const pacingText = isUnderPacing
+        ? `✨ Tiết kiệm hơn nhịp độ ${fmtVnd(Math.abs(b.pacingDiff))}`
+        : `⚠️ Đang vượt nhịp độ ${fmtVnd(b.pacingDiff)}`;
+
+      let html = `
+        <!-- Hero: Còn được tiêu hôm nay -->
+        <div class="card money-hero">
+          <div class="money-hero-sub">Còn Được Tiêu Hôm Nay</div>
+          <div class="money-hero-val privacy-blur">${fmtVnd(b.todayRemaining)}</div>
+          <div class="money-hero-desc">
+            ${isZeroSpentToday
+              ? '🎉 Hôm nay chưa chi tiêu gì · Còn nguyên hạn mức an toàn'
+              : `Đã chi hôm nay: <span class="privacy-blur">${fmtVnd(finances.today)}</span> · Hạn mức ngày: ${fmtVnd(b.safeDaily)}`}
+          </div>
+        </div>
+
+        <!-- Pacing Budget Bar -->
         <div class="card">
           <div class="card-title">
-            <span class="icon-tag">🔁 Thuê Bao Định Kỳ</span>
-            <span class="badge">${fmtVnd(subscriptions.totalMonthly)}/tháng</span>
+            <span class="icon-tag">🎯 Nhịp Độ Ngân Sách Tháng</span>
+            <span class="badge" style="background:rgba(16,185,129,0.15);color:${pacingColor};">${spentPct}%</span>
           </div>
+
+          <div class="pacing-track">
+            <div class="pacing-fill" style="width:${spentPct}%;background:${spentPct >= 85 ? 'linear-gradient(90deg, #F59E0B, #F43F5E)' : 'linear-gradient(90deg, #10B981, #06B6D4)'};"></div>
+            <div class="pacing-notch" style="left:${pacingPct}%;" title="Nhịp độ lý tưởng">
+              <span class="pacing-notch-label">Nhịp độ ${pacingPct}%</span>
+            </div>
+          </div>
+
+          <div style="font-size:12px;font-weight:700;color:${pacingColor};margin-top:22px;">
+            ${pacingText}
+          </div>
+
+          <div class="meta-row">
+            <span>Đã chi: <strong class="privacy-blur">${fmtVnd(b.spent)}</strong></span>
+            <span>Hạn mức: <strong class="privacy-blur">${fmtVnd(b.amount)}</strong></span>
+          </div>
+          <div class="meta-row">
+            <span>Còn lại: <strong class="privacy-blur">${fmtVnd(b.remaining)}</strong></span>
+            <span>Còn ${b.daysLeft} ngày</span>
+          </div>
+        </div>
       `;
-      if (!subscriptions.items || subscriptions.items.length === 0) {
-        html += '<div style="color:var(--text-sub);font-size:13px;padding:8px 0;">Chưa có gói thuê bao nào được lưu.</div>';
+
+      // Unclassified Inbox
+      if (finances.unclassifiedExpenses && finances.unclassifiedExpenses.length > 0) {
+        html += `
+          <div class="card inbox-card">
+            <div class="card-title" style="color:var(--amber);">
+              <span class="icon-tag">📬 Hộp Thư Chưa Phân Loại (${finances.unclassifiedExpenses.length})</span>
+            </div>
+            ${finances.unclassifiedExpenses.map(p => renderPendingItem(p)).join('')}
+          </div>
+        `;
+      }
+
+      // Heatmap Grid (GitHub style)
+      html += renderHeatmap(finances.dailySpendMap);
+
+      // Category breakdown
+      html += renderCategoryDonut(finances.categoryBreakdown, b.spent);
+
+      // Bank Balance Trajectory
+      if (finances.bankBalances && finances.bankBalances.length > 0) {
+        html += renderBalanceTrajectory(finances.bankBalances);
+      }
+
+      // Subscriptions
+      html += renderSubscriptions(subscriptions);
+
+      // Recent 8 expenses
+      html += renderRecentExpenses(finances.recentExpenses);
+
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function renderPendingItem(p) {
+      return `
+        <div class="inbox-item" id="pending-item-${p.id}">
+          <div class="inbox-item-top">
+            <div class="inbox-item-desc">${p.description}</div>
+            <div class="inbox-item-amt privacy-blur">${fmtVnd(p.amount)}</div>
+          </div>
+          <div style="font-size:10px;color:var(--text-sub);">${p.date}</div>
+          <div class="inbox-chips">
+            <button class="chip-btn" onclick="classifyPending(${p.id}, 'food', 'Ăn uống')">🍽 Ăn uống</button>
+            <button class="chip-btn" onclick="classifyPending(${p.id}, 'transport', 'Đi lại')">🚗 Đi lại</button>
+            <button class="chip-btn" onclick="classifyPending(${p.id}, 'shopping', 'Mua sắm')">🛍 Mua sắm</button>
+            <button class="chip-btn" onclick="classifyPending(${p.id}, 'bills', 'Sinh hoạt')">💡 Sinh hoạt</button>
+            <button class="chip-btn" onclick="classifyPending(${p.id}, 'entertainment', 'Giải trí')">🎉 Giải trí</button>
+            <button class="chip-btn" onclick="classifyPending(${p.id}, 'other', 'Khác')">📝 Khác</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function classifyPending(pendingId, category, note) {
+      const el = document.getElementById(`pending-item-${pendingId}`);
+      if (el) el.style.opacity = '0.4';
+      await postAction({
+        type: 'classify_pending',
+        pendingId,
+        category,
+        note,
+      });
+    }
+
+    // Heatmap renderer
+    function renderHeatmap(dailyMap = {}) {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1;
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const todayDate = today.getDate();
+
+      let cellsHtml = '';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const amt = dailyMap[dStr] || 0;
+        let level = '';
+        if (amt > 150000) level = 'level-3';
+        else if (amt > 50000) level = 'level-2';
+        else if (amt > 0) level = 'level-1';
+
+        const isToday = d === todayDate ? 'today' : '';
+        cellsHtml += `
+          <div class="heat-cell ${level} ${isToday}" onclick="showDayDetails('${dStr}', ${amt})">
+            <span>${d}</span>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="card">
+          <div class="card-title">
+            <span class="icon-tag">🗓 Lịch Nhiệt Chi Tiêu Tháng</span>
+            <span class="badge">GitHub Style</span>
+          </div>
+          <div class="heatmap-grid">
+            ${cellsHtml}
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:6px;align-items:center;margin-top:10px;font-size:10px;color:var(--text-sub);">
+            <span>Ít</span>
+            <span style="width:10px;height:10px;background:#141D30;border-radius:2px;"></span>
+            <span style="width:10px;height:10px;background:rgba(245,158,11,0.25);border-radius:2px;"></span>
+            <span style="width:10px;height:10px;background:rgba(245,158,11,0.55);border-radius:2px;"></span>
+            <span style="width:10px;height:10px;background:rgba(244,63,94,0.85);border-radius:2px;"></span>
+            <span>Nhiều</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function showDayDetails(dateStr, amt) {
+      if (amt === 0) alert(`Ngày ${dateStr}: Chưa chi gì 🎉`);
+      else alert(`Ngày ${dateStr}: Đã chi ${fmtVnd(amt)}`);
+    }
+
+    // Category Donut renderer
+    function renderCategoryDonut(categories = {}, totalSpent = 0) {
+      const items = Object.entries(categories).sort((a, b) => b[1].amount - a[1].amount);
+      if (items.length === 0) return '';
+
+      let listHtml = '';
+      items.slice(0, 5).forEach(([catKey, c]) => {
+        listHtml += `
+          <div class="cat-item">
+            <span style="display:flex;align-items:center;gap:6px;">
+              <span>${c.icon}</span>
+              <span>${c.label}</span>
+            </span>
+            <span style="font-weight:700;" class="privacy-blur">${fmtVnd(c.amount)} (${c.percent}%)</span>
+          </div>
+        `;
+      });
+
+      return `
+        <div class="card">
+          <div class="card-title">
+            <span class="icon-tag">📂 Danh Mục Chi Tiêu</span>
+            <span class="badge">Tháng này</span>
+          </div>
+          <div class="donut-wrap">
+            <div class="cat-list">
+              ${listHtml}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Balance trajectory
+    function renderBalanceTrajectory(balances = []) {
+      if (balances.length < 2) return '';
+      const vals = balances.map(b => b.balance);
+      const min = Math.min(...vals);
+      const max = Math.max(...vals);
+      const latest = vals[vals.length - 1];
+
+      return `
+        <div class="card">
+          <div class="card-title">
+            <span class="icon-tag">📈 Đường Biến Động Số Dư VCB</span>
+            <span class="badge privacy-blur">${fmtVnd(latest)}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-sub);margin-bottom:8px;">
+            Thấp nhất: <strong class="privacy-blur">${fmtVnd(min)}</strong> · Cao nhất: <strong class="privacy-blur">${fmtVnd(max)}</strong>
+          </div>
+          <div style="height:60px;display:flex;align-items:flex-end;gap:4px;padding-top:10px;">
+            ${balances.map(b => {
+              const h = max === min ? 50 : Math.round(((b.balance - min) / (max - min)) * 80 + 20);
+              return `<div style="flex:1;height:${h}%;background:linear-gradient(180deg,#38BDF8,#10B981);border-radius:3px;" title="${b.date}: ${fmtVnd(b.balance)}"></div>`;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Subscriptions
+    function renderSubscriptions(subs) {
+      let itemsHtml = '';
+      if (!subs.items || subs.items.length === 0) {
+        itemsHtml = '<div style="color:var(--text-sub);font-size:12px;padding:6px 0;">Chưa có thuê bao định kỳ.</div>';
       } else {
-        subscriptions.items.forEach(s => {
-          const badgeColor = s.daysLeft <= 2 ? 'var(--rose)' : 'var(--cyan)';
-          html += `
+        subs.items.forEach(s => {
+          itemsHtml += `
             <div class="list-item">
               <div class="item-left">
                 <div class="item-icon">📦</div>
                 <div>
                   <div class="item-name">${s.name}</div>
-                  <div class="item-sub">Ngày ${String(s.paymentDay).padStart(2, '0')} hàng tháng · <span style="color:${badgeColor}">${s.dueText}</span></div>
+                  <div class="item-sub">Ngày ${s.paymentDay} hàng tháng · <span style="color:${s.daysLeft <= 3 ? 'var(--rose)' : 'var(--cyan)'}">${s.dueText}</span></div>
                 </div>
               </div>
-              <div class="item-amt">${fmtVnd(s.amount)}</div>
+              <div class="item-amt privacy-blur">${fmtVnd(s.amount)}</div>
             </div>
           `;
         });
       }
-      html += '</div>';
 
-      // 4. Reminders Card
-      html += `
+      return `
         <div class="card">
           <div class="card-title">
-            <span class="icon-tag">📋 Việc Cần Làm</span>
-            <span class="badge" style="background:rgba(139,92,246,0.15);color:var(--purple)">Đã xong: ${reminders.completedTodayCount}</span>
+            <span class="icon-tag">🔁 Thuê Bao Định Kỳ</span>
+            <span class="badge privacy-blur">${fmtVnd(subs.totalMonthly)}/tháng</span>
           </div>
+          ${itemsHtml}
+        </div>
       `;
+    }
+
+    // Recent Expenses
+    function renderRecentExpenses(expenses = []) {
+      if (!expenses || expenses.length === 0) return '';
+      let listHtml = '';
+      expenses.forEach(e => {
+        listHtml += `
+          <div class="list-item">
+            <div class="item-left">
+              <div class="item-icon">${e.icon}</div>
+              <div>
+                <div class="item-name">${e.description}</div>
+                <div class="item-sub">${e.category} · ${e.date}</div>
+              </div>
+            </div>
+            <div class="item-amt privacy-blur">${fmtVnd(e.amount)}</div>
+          </div>
+        `;
+      });
+
+      return `
+        <div class="card">
+          <div class="card-title">
+            <span class="icon-tag">📝 Gần Đây</span>
+            <span class="badge">${expenses.length} khoản</span>
+          </div>
+          ${listHtml}
+        </div>
+      `;
+    }
+
+    // 3. TAB SỨC KHỎE (HEALTH & SLEEP)
+    function renderHealth() {
+      const { health } = dashboardData;
+      const s = health.sleepStages;
+      const totalSleep = health.sleepTotalMins || 420;
+      const deepPct = Math.round((s.deep / totalSleep) * 100);
+      const remPct = Math.round((s.rem / totalSleep) * 100);
+      const corePct = Math.round((s.core / totalSleep) * 100);
+      const awakePct = Math.max(0, 100 - deepPct - remPct - corePct);
+
+      let html = `
+        <!-- Sleep Stages Card -->
+        <div class="card">
+          <div class="card-title">
+            <span class="icon-tag">😴 Giấc Ngủ Đêm Qua</span>
+            <span class="badge" style="background:rgba(139,92,246,0.15);color:var(--purple);">${health.sleepFormatted}</span>
+          </div>
+
+          <div class="sleep-bar-wrap">
+            <div class="sleep-seg deep" style="width:${deepPct}%;" title="Ngủ sâu ${s.deep}p (${deepPct}%)"></div>
+            <div class="sleep-seg rem" style="width:${remPct}%;" title="Ngủ REM ${s.rem}p (${remPct}%)"></div>
+            <div class="sleep-seg core" style="width:${corePct}%;" title="Ngủ nông ${s.core}p (${corePct}%)"></div>
+            <div class="sleep-seg awake" style="width:${awakePct}%;" title="Thức ${s.awake}p (${awakePct}%)"></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:10px;text-align:center;">
+            <div>
+              <div style="font-size:10px;color:var(--indigo);font-weight:700;">NGỦ SÂU</div>
+              <div style="font-size:12px;font-weight:800;">${s.deep}m</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--cyan);font-weight:700;">NGỦ REM</div>
+              <div style="font-size:12px;font-weight:800;">${s.rem}m</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--purple);font-weight:700;">NGỦ NÔNG</div>
+              <div style="font-size:12px;font-weight:800;">${s.core}m</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--amber);font-weight:700;">THỨC</div>
+              <div style="font-size:12px;font-weight:800;">${s.awake}m</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HRV Personal Baseline Card -->
+        <div class="card">
+          <div class="card-title">
+            <span class="icon-tag">💓 HRV (Biến Thiên Nhịp Tim)</span>
+            <span class="badge">${health.hrv.current ? health.hrv.current + ' ms' : '--'}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-sub);">
+            Dải nền cá nhân 28 ngày: <strong>${health.hrv.baselineMin} - ${health.hrv.baselineMax} ms</strong>
+          </div>
+          <div class="baseline-track">
+            <div class="baseline-band" style="left:30%;width:40%;"></div>
+            <div class="baseline-pointer" style="left:${health.hrv.current ? Math.min(95, Math.max(5, health.hrv.current)) : 50}%;"></div>
+          </div>
+          <div style="font-size:11px;color:var(--emerald);font-weight:600;margin-top:6px;">
+            ✨ Chỉ số đang nằm trong dải sinh lý bình thường của bạn
+          </div>
+        </div>
+
+        <!-- Resting Heart Rate -->
+        <div class="card">
+          <div class="card-title">
+            <span class="icon-tag">🫀 Nhịp Tim Nghỉ (RHR)</span>
+            <span class="badge">${health.rhr.current ? health.rhr.current + ' bpm' : '--'}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-sub);">
+            Dải nền cá nhân 28 ngày: <strong>${health.rhr.baselineMin} - ${health.rhr.baselineMax} bpm</strong>
+          </div>
+          <div class="baseline-track">
+            <div class="baseline-band" style="left:35%;width:35%;"></div>
+            <div class="baseline-pointer" style="left:${health.rhr.current ? Math.min(95, Math.max(5, health.rhr.current - 20)) : 50}%;"></div>
+          </div>
+        </div>
+
+        <!-- Body Battery Breakdown -->
+        <div class="card">
+          <div class="card-title">
+            <span class="icon-tag">🔋 Pin Thể Chất (Body Battery)</span>
+            <span class="badge" style="background:rgba(16,185,129,0.15);color:var(--emerald);">${health.bodyBattery}%</span>
+          </div>
+          <div style="font-size:12px;line-height:1.5;color:var(--text-sub);">
+            Pin thể chất được tổng hợp từ 3 trụ cột phục hồi chính: Giấc ngủ sâu/REM đêm qua, độ ổn định biến thiên nhịp tim HRV và tải vận động.
+          </div>
+        </div>
+
+        <!-- Steps -->
+        <div class="card">
+          <div class="card-title">
+            <span class="icon-tag">🚶 Bước Chân Hôm Nay</span>
+            <span class="badge">${health.steps.current.toLocaleString('vi-VN')} / 10.000</span>
+          </div>
+          <div class="pacing-track" style="margin-top:8px;">
+            <div class="pacing-fill" style="width:${health.steps.percent}%;background:linear-gradient(90deg, #06B6D4, #10B981);"></div>
+          </div>
+        </div>
+      `;
+
+      // Body stats (weight & BMI)
+      if (health.weightKg) {
+        html += `
+          <div class="card">
+            <div class="card-title">
+              <span class="icon-tag">⚖️ Cân Nặng & Thể Trạng</span>
+              <span class="badge">${health.weightKg} kg</span>
+            </div>
+            <div class="meta-row">
+              <span>BMI: <strong>${health.bmi || '--'}</strong> (${health.bmiCategory || '--'})</span>
+              <span>Chiều cao: <strong>${health.heightCm || '--'} cm</strong></span>
+            </div>
+          </div>
+        `;
+      }
+
+      document.getElementById('content').innerHTML = html;
+    }
+
+    // 4. TAB PHÒNG (ROOM TELEMETRY)
+    function renderRoom() {
+      const { room } = dashboardData;
+      let html = `
+        <div class="card">
+          <div class="card-title">
+            <span class="icon-tag">🏠 Phòng & Sức Khỏe</span>
+            <span class="badge" style="background:rgba(16,185,129,0.15);color:var(--emerald);">${room.comfort}</span>
+          </div>
+          <div class="grid-2" style="margin-top:10px;">
+            <div class="quick-box">
+              <div class="quick-icon">🌡️</div>
+              <div>
+                <div class="quick-title">Nhiệt độ</div>
+                <div class="quick-val">${room.temperature}°C</div>
+              </div>
+            </div>
+            <div class="quick-box">
+              <div class="quick-icon">💧</div>
+              <div>
+                <div class="quick-title">Độ ẩm</div>
+                <div class="quick-val">${room.humidity}%</div>
+              </div>
+            </div>
+          </div>
+          <div class="meta-row" style="margin-top:10px;">
+            <span>Cảm biến: <strong>${room.sensorOnline ? '🟢 Hoạt động tốt' : '🔴 Ngoại tuyến'}</strong></span>
+            <span>Không gian: <strong>Vừa vặn, mát mẻ</strong></span>
+          </div>
+        </div>
+      `;
+
+      // 24h trend bars
+      if (room.recent24h && room.recent24h.length > 0) {
+        html += `
+          <div class="card">
+            <div class="card-title">
+              <span class="icon-tag">📈 Biểu Đồ Nhiệt Độ 24 Giờ</span>
+              <span class="badge">ESP32</span>
+            </div>
+            <div style="height:70px;display:flex;align-items:flex-end;gap:3px;padding-top:12px;">
+              ${room.recent24h.map(r => {
+                const h = Math.min(100, Math.max(20, Math.round((r.temp - 18) * 6)));
+                return `<div style="flex:1;height:${h}%;background:linear-gradient(180deg,#F59E0B,#38BDF8);border-radius:2px;" title="${r.time}: ${r.temp}°C"></div>`;
+              }).join('')}
+            </div>
+            <div class="meta-row" style="margin-top:8px;">
+              <span>Gần đây nhất: <strong>${room.recent24h[room.recent24h.length - 1].temp}°C</strong></span>
+              <span>24 mốc đo gần nhất</span>
+            </div>
+          </div>
+        `;
+      }
+
+      document.getElementById('content').innerHTML = html;
+    }
+
+    // 5. TAB VIỆC (TASKS & RPG RADAR)
+    function renderTasks() {
+      const { reminders, rpg } = dashboardData;
+
+      // Pending Tasks List
+      let taskListHtml = '';
       if (!reminders.pending || reminders.pending.length === 0) {
-        html += '<div style="color:var(--text-sub);font-size:13px;padding:8px 0;">Không có việc nào đang chờ 🎉</div>';
+        taskListHtml = '<div style="color:var(--text-sub);font-size:13px;padding:8px 0;">Không có việc nào đang chờ 🎉 Tận hưởng ngày tuyệt vời nha!</div>';
       } else {
         reminders.pending.forEach(r => {
-          html += `
-            <div class="list-item">
+          taskListHtml += `
+            <div class="list-item" id="task-row-${r.id}">
               <div class="item-left">
-                <div class="item-icon" style="color:var(--emerald)">✓</div>
+                <button class="chip-btn" style="border-radius:50%;width:28px;height:28px;padding:0;justify-content:center;color:var(--emerald);" onclick="completeTask(${r.id})">✓</button>
                 <div>
                   <div class="item-name">${r.task}</div>
                   <div class="item-sub">${r.repeat ? 'Lặp: ' + r.repeat : 'Lời nhắc'}</div>
@@ -287,44 +1573,58 @@
           `;
         });
       }
-      html += '</div>';
 
-      // 5. Room & Health Card
-      html += `
+      // RPG Radar SVG (Center 50,50, Radius 40)
+      const center = 50;
+      const radius = 38;
+      // 5 points at angles: -90, -18, 54, 126, 198 deg
+      const angles = [-90, -18, 54, 126, 198].map(a => (a * Math.PI) / 180);
+      const stats = [rpg.str, rpg.int, rpg.dis, rpg.eng, rpg.gold];
+      const points = stats.map((val, i) => {
+        const r = (val / 100) * radius;
+        const x = center + r * Math.cos(angles[i]);
+        const y = center + r * Math.sin(angles[i]);
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+
+      // Web grid polygons (25%, 50%, 75%, 100%)
+      const webs = [0.25, 0.5, 0.75, 1.0].map(scale => {
+        return angles.map(a => {
+          const x = center + radius * scale * Math.cos(a);
+          const y = center + radius * scale * Math.sin(a);
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        }).join(' ');
+      });
+
+      let html = `
+        <!-- Tasks Checklist Card -->
         <div class="card">
           <div class="card-title">
-            <span class="icon-tag">🏠 Phòng & Sức Khỏe</span>
-            <span class="badge" style="background:rgba(16,185,129,0.15);color:var(--emerald)">${room.comfort}</span>
+            <span class="icon-tag">📋 Việc Cần Làm</span>
+            <span class="badge" style="background:rgba(139,92,246,0.15);color:var(--purple);">Đã xong hôm nay: ${reminders.completedTodayCount}</span>
           </div>
-          <div class="env-grid">
-            <div class="env-box">
-              <span style="font-size:22px;">🌡️</span>
-              <div>
-                <div class="env-val">${room.temperature}°C</div>
-                <div class="env-label">Nhiệt độ phòng</div>
-              </div>
-            </div>
-            <div class="env-box">
-              <span style="font-size:22px;">💧</span>
-              <div>
-                <div class="env-val">${room.humidity}%</div>
-                <div class="env-label">Độ ẩm không khí</div>
-              </div>
-            </div>
-            <div class="env-box">
-              <span style="font-size:22px;">🔋</span>
-              <div>
-                <div class="env-val">${health.bodyBattery}%</div>
-                <div class="env-label">Pin thể chất</div>
-              </div>
-            </div>
-            <div class="env-box">
-              <span style="font-size:22px;">😴</span>
-              <div>
-                <div class="env-val">${health.sleepFormatted}</div>
-                <div class="env-label">Giấc ngủ</div>
-              </div>
-            </div>
+          ${taskListHtml}
+        </div>
+
+        <!-- RPG 5-Stat Radar Card -->
+        <div class="card">
+          <div class="card-title">
+            <span class="icon-tag">🛡️ Chỉ Số Thể Lực & Kỷ Luật (RPG)</span>
+            <span class="badge">Level System</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;padding:10px 0;">
+            <svg viewBox="0 0 100 100" style="width:180px;height:180px;overflow:visible;">
+              ${webs.map(w => `<polygon points="${w}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"></polygon>`).join('')}
+              ${angles.map(a => `<line x1="${center}" y1="${center}" x2="${(center + radius * Math.cos(a)).toFixed(1)}" y2="${(center + radius * Math.sin(a)).toFixed(1)}" stroke="rgba(255,255,255,0.1)" stroke-width="0.8"></line>`).join('')}
+              <polygon points="${points}" fill="rgba(56, 189, 248, 0.25)" stroke="#38BDF8" stroke-width="1.8"></polygon>
+
+              <!-- Labels -->
+              <text x="${center}" y="6" text-anchor="middle" fill="var(--text-sub)" font-size="6" font-weight="700">STR (Vận động) ${rpg.str}</text>
+              <text x="96" y="38" text-anchor="start" fill="var(--text-sub)" font-size="6" font-weight="700">INT (Trí tuệ) ${rpg.int}</text>
+              <text x="82" y="96" text-anchor="middle" fill="var(--text-sub)" font-size="6" font-weight="700">DIS (Kỷ luật) ${rpg.dis}</text>
+              <text x="18" y="96" text-anchor="middle" fill="var(--text-sub)" font-size="6" font-weight="700">ENG (Năng lượng) ${rpg.eng}</text>
+              <text x="4" y="38" text-anchor="end" fill="var(--text-sub)" font-size="6" font-weight="700">GOLD (Tài chính) ${rpg.gold}</text>
+            </svg>
           </div>
         </div>
       `;
@@ -332,11 +1632,86 @@
       document.getElementById('content').innerHTML = html;
     }
 
-    document.getElementById('refreshBtn').addEventListener('click', () => {
-      document.getElementById('content').innerHTML = '<div class="loading">Đang làm mới...</div>';
-      loadData();
+    async function completeTask(reminderId) {
+      const row = document.getElementById(`task-row-${reminderId}`);
+      if (row) row.style.opacity = '0.3';
+      await postAction({
+        type: 'complete_reminder',
+        reminderId,
+      });
+    }
+
+    // Modal Sheet Handlers
+    const fabBtn = document.getElementById('fabBtn');
+    const quickModal = document.getElementById('quickModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+
+    fabBtn.addEventListener('click', () => {
+      quickModal.classList.add('open');
+    });
+    closeModalBtn.addEventListener('click', () => {
+      quickModal.classList.remove('open');
+    });
+    quickModal.addEventListener('click', (e) => {
+      if (e.target === quickModal) quickModal.classList.remove('open');
     });
 
+    let selectedCat = 'food';
+    document.querySelectorAll('#quickCatChips .chip-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#quickCatChips .chip-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedCat = btn.dataset.cat;
+      });
+    });
+
+    document.getElementById('saveExpenseBtn').addEventListener('click', async () => {
+      const amt = Number(document.getElementById('quickAmt').value);
+      const note = document.getElementById('quickNote').value;
+      if (!amt || amt <= 0) {
+        alert('Vui lòng nhập số tiền hợp lệ!');
+        return;
+      }
+      const ok = await postAction({
+        type: 'quick_expense',
+        amount: amt,
+        category: selectedCat,
+        note,
+      });
+      if (ok) {
+        document.getElementById('quickAmt').value = '';
+        document.getElementById('quickNote').value = '';
+        quickModal.classList.remove('open');
+      }
+    });
+
+    document.getElementById('quickWaterBtn').addEventListener('click', async () => {
+      const ok = await postAction({ type: 'quick_water' });
+      if (ok) quickModal.classList.remove('open');
+    });
+
+    document.getElementById('quickFocusBtn').addEventListener('click', async () => {
+      alert('Đã kích hoạt phiên Focus 25 phút!');
+      quickModal.classList.remove('open');
+    });
+
+    document.getElementById('saveTaskBtn').addEventListener('click', async () => {
+      const task = document.getElementById('quickTaskInput').value;
+      if (!task || !task.trim()) {
+        alert('Vui lòng nhập nội dung việc cần làm!');
+        return;
+      }
+      const ok = await postAction({
+        type: 'quick_reminder',
+        task: task.trim(),
+      });
+      if (ok) {
+        document.getElementById('quickTaskInput').value = '';
+        quickModal.classList.remove('open');
+      }
+    });
+
+    // Start load
     loadData();
   </script>
 </body>
