@@ -267,6 +267,18 @@
     .task .s { font-size: 12px; color: var(--text-3); margin-top: 3px; }
     .task .more { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--text-3); }
 
+    /* Loans */
+    .loan-group { padding: 12px 0; border-top: 1px solid var(--line); }
+    .loan-group:first-of-type { border-top: 0; padding-top: 4px; }
+    .loan-head { display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px;
+      background: var(--move-soft); color: var(--move); flex-shrink: 0; }
+    .loan-item { display: flex; align-items: center; gap: 8px; margin: 8px 0 0 44px; font-size: 12.5px; color: var(--text-2);
+      transition: opacity .3s, transform .35s var(--ease-out); }
+    .loan-item.leaving { opacity: 0; transform: translateX(30px); }
+    .loan-item .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chip.ok { background: var(--move-soft); color: var(--move); }
+
     /* Empty + error */
     .empty { text-align: center; padding: 18px 8px; color: var(--text-3); font-size: 13px; line-height: 1.5; }
     .empty .e { font-size: 28px; display: block; margin-bottom: 6px; }
@@ -682,7 +694,8 @@
         + items.slice(0, 4).map(function (p) {
           return '<div class="inbox-item" data-pending="' + esc(p.id) + '"><div class="inbox-top"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(p.description) + '</span>'
             + '<b>' + money(p.amount) + '</b></div><div class="faint" style="font-size:11.5px;margin-top:3px">' + esc(p.date) + '</div>'
-            + '<div class="chips">' + cats.map(function (c) { return '<button class="chip" data-classify="' + esc(c.key) + '">' + c.icon + ' ' + esc(shortCat(c.label)) + '</button>'; }).join('') + '</div></div>';
+            + '<div class="chips">' + cats.map(function (c) { return '<button class="chip" data-classify="' + esc(c.key) + '">' + c.icon + ' ' + esc(shortCat(c.label)) + '</button>'; }).join('')
+            + '<button class="chip ok" data-classify-loan="' + esc(p.amount) + '">🤝 Cho mượn</button></div></div>';
         }).join('') + '</section>';
     }
     function shortCat(label) { return String(label).split(' & ')[0]; }
@@ -696,6 +709,7 @@
       var summary = '<section class="card hero rise" style="--i:' + (i++) + '"><div class="eyebrow">Đã chi ' + (range === 'today' ? 'hôm nay' : range === 'week' ? 'tuần này' : 'tháng này') + '</div>'
         + '<div class="big-num money">' + num(total) + '<span class="unit">đ</span></div>'
         + (range === 'month' ? '<div class="hero-sub">Thu tháng này ' + money(f.monthIncome || 0) + ' · cân đối <b class="money" style="color:' + ((f.monthIncome || 0) - f.thisMonth >= 0 ? 'var(--good)' : 'var(--bad)') + '">' + vndShort((f.monthIncome || 0) - f.thisMonth) + '</b></div>' : '')
+        + (d.loans && d.loans.outstanding ? '<div class="hero-sub" style="margin-top:4px">🤝 Đang cho mượn <b class="money">' + vndShort(d.loans.outstanding) + '</b> · không tính vào chi</div>' : '')
         + '</section>';
 
       var budget;
@@ -737,7 +751,54 @@
       var inbox = plural(f.unclassifiedExpenses).length ? inboxCard(f.unclassifiedExpenses, i++) : '';
       var subs = subsCard(d.subscriptions || {}, i++);
       var bal = balanceCard(plural(f.bankBalances), i++);
-      return seg + summary + inbox + budget + chart + donut + tx + subs + bal;
+      var loans = loansCard(d.loans || {}, i++);
+      return seg + summary + inbox + budget + loans + chart + donut + tx + subs + bal;
+    }
+    function initial(name) { var w = String(name || '?').trim().split(/\s+/); return (w[w.length - 1] || '?').charAt(0).toUpperCase(); }
+    function loansCard(l, i) {
+      var groups = plural(l.borrowers);
+      var head = '<div class="card-head"><div><div class="card-title">Cho mượn</div><div class="faint" style="font-size:12px;margin-top:2px">Không tính vào chi tiêu</div></div>'
+        + '<button class="link" data-loan-add="1">+ Ghi</button></div>';
+      if (!groups.length) {
+        return '<section class="card rise" style="--i:' + i + '">' + head + '<div class="empty" style="padding:8px">Không ai đang nợ bạn 🎉</div></section>';
+      }
+      return '<section class="card rise" style="--i:' + i + '">' + head
+        + '<div style="display:flex;align-items:baseline;gap:8px;margin:-4px 0 6px"><span class="money" style="font-size:22px;font-weight:800">' + vnd(l.outstanding) + '&nbsp;đ</span><span class="faint" style="font-size:12px">đang chờ trả · ' + l.openCount + ' khoản</span></div>'
+        + groups.map(function (g) {
+          return '<div class="loan-group"><div class="loan-head"><span class="avatar">' + esc(initial(g.borrower)) + '</span><span style="flex:1;min-width:0;font-weight:600">' + esc(g.borrower) + '</span><b class="money">' + vnd(g.total) + ' đ</b></div>'
+            + g.items.map(function (it) {
+              return '<div class="loan-item" data-loan-row="' + esc(it.id) + '"><span class="grow"><span class="money">' + vndShort(it.amount) + '</span> · ' + esc(dm(it.lentDate)) + (it.note ? ' · ' + esc(it.note) : '') + '</span>'
+                + '<button class="chip ok" data-repay="' + esc(it.id) + '">Đã trả</button></div>';
+            }).join('') + '</div>';
+        }).join('') + '</section>';
+    }
+    function knownBorrowers() {
+      var l = state.data && state.data.loans || {};
+      var names = plural(l.borrowers).map(function (g) { return g.borrower; }).concat(plural(l.recentlyRepaid).map(function (r) { return r.borrower; }));
+      return names.filter(function (n, k) { return names.indexOf(n) === k; });
+    }
+    function openLoanSheet(opts) {
+      opts = opts || {};
+      var names = knownBorrowers();
+      openSheet('<h3>' + esc(opts.title || 'Ghi khoản cho mượn 🤝') + '</h3>'
+        + (opts.amount ? '<div class="big-num money" style="font-size:28px;margin:-6px 0 14px">' + vnd(opts.amount) + '<span class="unit">đ</span></div>'
+          : '<div class="field"><input class="input amount-input money" id="lAmt" inputmode="decimal" placeholder="0" autocomplete="off"></div>')
+        + '<div class="field"><label>NGƯỜI MƯỢN</label><input class="input" id="lName" maxlength="80" placeholder="Tên người mượn" autocomplete="off">'
+        + (names.length ? '<div class="chips">' + names.slice(0, 8).map(function (n) { return '<button class="chip" data-name="' + esc(n) + '">' + esc(n) + '</button>'; }).join('') + '</div>' : '') + '</div>'
+        + '<div class="field"><label>GHI CHÚ</label><input class="input" id="lNote" maxlength="300" placeholder="Không bắt buộc"></div>'
+        + '<div class="faint" style="font-size:12.5px;margin:-4px 0 14px">Khoản này không tính vào chi tiêu. Đánh dấu "Đã trả" khi được trả lại.</div>'
+        + '<button class="btn" id="lSave">Lưu</button>', function (root) {
+          var name = root.querySelector('#lName');
+          root.querySelectorAll('[data-name]').forEach(function (b) { b.addEventListener('click', function () { name.value = b.dataset.name; haptic('select'); }); });
+          setTimeout(function () { (root.querySelector('#lAmt') || name).focus(); }, 380);
+          root.querySelector('#lSave').addEventListener('click', function () {
+            var amt = opts.amount || parseAmount((root.querySelector('#lAmt') || {}).value);
+            if (!name.value.trim()) { name.focus(); haptic('warning'); return; }
+            if (!(amt > 0)) { haptic('warning'); return; }
+            var btn = this; btn.disabled = true;
+            opts.save(name.value.trim(), amt, root.querySelector('#lNote').value).then(closeSheet).catch(function () { btn.disabled = false; });
+          });
+        });
     }
     function categoryBudgets(list) {
       list = plural(list);
@@ -959,6 +1020,22 @@
         }).catch(function () { el.classList.remove('sel'); });
         return;
       }
+      if ((el = t.closest('[data-classify-loan]'))) {
+        var pend = el.closest('[data-pending]');
+        return openLoanSheet({ title: 'Giao dịch này là cho mượn', amount: Number(el.dataset.classifyLoan), save: function (who, amt, note) {
+          return act({ type: 'classify_pending', pendingId: Number(pend.dataset.pending), category: 'loan', borrower: who, note: note }, 'Đã ghi cho ' + who + ' mượn');
+        } });
+      }
+      if ((el = t.closest('[data-loan-add]'))) {
+        return openLoanSheet({ save: function (who, amt, note) { return act({ type: 'add_loan', borrower: who, amount: amt, note: note }, 'Đã ghi cho ' + who + ' mượn ' + vndShort(amt)); } });
+      }
+      if ((el = t.closest('[data-repay]'))) {
+        var lr = el.closest('[data-loan-row]'), loanId = Number(el.dataset.repay);
+        haptic('medium'); burst(el);
+        act({ type: 'repay_loan', loanId: loanId }, null, { undo: function () { act({ type: 'reopen_loan', loanId: loanId }, 'Đã mở lại khoản cho mượn'); } })
+          .then(function () { lr.classList.add('leaving'); }).catch(function () {});
+        return;
+      }
       if ((el = t.closest('[data-tx]'))) return openTxSheet(el.dataset.tx);
       if ((el = t.closest('[data-done]'))) {
         var row = el.closest('.task');
@@ -1138,7 +1215,13 @@
       openSheet('<h3>' + esc(tx.description) + '</h3><div class="big-num money" style="font-size:28px;margin:-6px 0 4px">−' + vnd(tx.amount) + '<span class="unit">đ</span></div>'
         + '<div class="faint" style="font-size:13px;margin-bottom:18px">' + esc(tx.date) + (tx.time ? ' · ' + esc(tx.time) : '') + '</div>'
         + '<div class="field"><label>ĐỔI DANH MỤC</label>' + catGrid(tx.categoryKey) + '</div>'
+        + '<button class="btn ghost" id="loanBtn" style="margin-bottom:10px">🤝 Đây là tiền cho mượn</button>'
         + '<button class="btn danger" id="delBtn">Xóa khoản chi</button>', function (root) {
+          root.querySelector('#loanBtn').addEventListener('click', function () {
+            openLoanSheet({ title: 'Chuyển thành cho mượn', amount: tx.amount, save: function (who, amt, note) {
+              return act({ type: 'convert_expense_to_loan', expenseId: Number(id), borrower: who, note: note || tx.description }, 'Đã chuyển thành cho ' + who + ' mượn');
+            } });
+          });
           bindCatGrid(root, function (c) {
             if (c === tx.categoryKey) return;
             act({ type: 'recategorize_expense', expenseId: Number(id), category: c }, 'Đã đổi danh mục').then(closeSheet).catch(function () {});
