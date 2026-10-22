@@ -914,10 +914,16 @@
       if (dashboardData) render();
     }
 
+    // Telegram-signed session data; the server rejects requests without it.
+    function authHeaders(extra) {
+      return Object.assign({ 'x-telegram-init-data': (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '' }, extra || {});
+    }
+
     // Load Data
     async function loadData() {
       try {
-        const res = await fetch(API_URL);
+        const res = await fetch(API_URL, { headers: authHeaders() });
+        if (res.status === 401) throw new Error('Hãy mở Dashboard bằng nút /app trong bot Telegram');
         if (!res.ok) throw new Error('HTTP ' + res.status);
         dashboardData = await res.json();
         render();
@@ -944,7 +950,7 @@
       try {
         const res = await fetch(ACTION_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(body),
         });
         const resData = await res.json();
