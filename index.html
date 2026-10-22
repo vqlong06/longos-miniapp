@@ -5,1764 +5,1216 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>LongOS 2D Dashboard</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090D16;
-      --card-bg: #121A2D;
-      --card-sub: #16223B;
-      --card-border: rgba(255, 255, 255, 0.08);
-      --card-border-glow: rgba(56, 189, 248, 0.25);
-      --text-main: #F1F5F9;
-      --text-sub: #94A3B8;
-      --cyan: #06B6D4;
-      --emerald: #10B981;
-      --rose: #F43F5E;
-      --amber: #F59E0B;
-      --purple: #8B5CF6;
-      --indigo: #6366F1;
-      --accent: #38BDF8;
+      --bg: #07090F;
+      --bg-2: #0C1018;
+      --surface: #11161F;
+      --surface-2: #171D29;
+      --surface-3: #1F2633;
+      --line: rgba(255, 255, 255, 0.06);
+      --line-2: rgba(255, 255, 255, 0.11);
+      --text: #EEF1F7;
+      --text-2: #A9B1C2;
+      --text-3: #6B7487;
+      --money: #F5B547;
+      --money-soft: rgba(245, 181, 71, 0.14);
+      --sleep: #A48BFA;
+      --sleep-soft: rgba(164, 139, 250, 0.14);
+      --move: #3DDC97;
+      --move-soft: rgba(61, 220, 151, 0.14);
+      --room: #4CC3FF;
+      --room-soft: rgba(76, 195, 255, 0.14);
+      --task: #FF7A8A;
+      --task-soft: rgba(255, 122, 138, 0.14);
+      --good: #3DDC97;
+      --warn: #F5B547;
+      --bad: #FF6B6B;
+      --radius: 22px;
+      --radius-sm: 14px;
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --safe-top: max(env(safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px));
+      --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px));
     }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; background: var(--bg); }
     body {
-      background-color: var(--bg);
-      color: var(--text-main);
-      padding-top: calc(max(env(safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), 20px) + 36px);
-      padding-left: calc(max(env(safe-area-inset-left, 0px), var(--tg-safe-area-inset-left, 0px), var(--tg-content-safe-area-inset-left, 0px)) + 16px);
-      padding-right: calc(max(env(safe-area-inset-right, 0px), var(--tg-safe-area-inset-right, 0px), var(--tg-content-safe-area-inset-right, 0px)) + 16px);
-      padding-bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 0px), 20px) + 72px);
+      font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--text);
       -webkit-font-smoothing: antialiased;
-      min-height: 100vh;
+      overflow: hidden;
+      font-feature-settings: "tnum" 1;
     }
+    button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+    input, select { font: inherit; color: inherit; }
 
-    /* Privacy Blur Mode */
-    .privacy-active .privacy-blur {
-      filter: blur(7px);
-      user-select: none;
-      transition: filter 0.2s ease;
+    /* Ambient background: two slow drifting glows, transform-only. */
+    .ambient { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+    .ambient i {
+      position: absolute; width: 70vw; height: 70vw; border-radius: 50%;
+      filter: blur(70px); opacity: 0.22; will-change: transform;
+    }
+    .ambient i:nth-child(1) { background: #3B4CCA; top: -25vw; left: -20vw; animation: drift 22s ease-in-out infinite alternate; }
+    .ambient i:nth-child(2) { background: #0E8A7A; bottom: -30vw; right: -25vw; animation: drift 28s ease-in-out infinite alternate-reverse; opacity: 0.16; }
+    @keyframes drift { to { transform: translate3d(12vw, 10vw, 0) scale(1.15); } }
+
+    .app { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; max-width: 560px; margin: 0 auto; }
+    .scroller {
+      flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+      padding: calc(var(--safe-top) + 14px) 16px calc(var(--safe-bottom) + 108px);
+      overscroll-behavior: contain;
     }
 
     /* Header */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 19px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #38BDF8, #818CF8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .brand-sub {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--cyan);
-      background: rgba(6, 182, 212, 0.12);
-      padding: 2px 7px;
-      border-radius: 8px;
-      border: 1px solid rgba(6, 182, 212, 0.2);
-    }
-    .header-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .hello small { display: block; color: var(--text-3); font-size: 12.5px; font-weight: 500; letter-spacing: 0.02em; }
+    .hello h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-top: 2px; }
+    .top-actions { display: flex; gap: 8px; }
     .icon-btn {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      color: var(--text-sub);
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      cursor: pointer;
-      transition: all 0.2s;
+      width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center;
+      background: var(--surface); border: 1px solid var(--line); color: var(--text-2);
+      transition: transform 0.2s var(--ease-out), background 0.2s;
     }
-    .icon-btn:active {
-      transform: scale(0.92);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-    .icon-btn.active {
-      color: var(--amber);
-      border-color: rgba(245, 158, 11, 0.4);
-      background: rgba(245, 158, 11, 0.1);
-    }
+    .icon-btn:active { transform: scale(0.9); }
+    .icon-btn.on { color: var(--money); background: var(--money-soft); border-color: transparent; }
+    .icon-btn svg { width: 19px; height: 19px; }
+    .spin svg { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Pull to refresh */
+    .ptr { height: 0; display: grid; place-items: center; overflow: hidden; color: var(--text-3); font-size: 12px; transition: height 0.25s var(--ease-out); }
+    .ptr .dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line-2); border-top-color: var(--room); }
 
     /* Cards */
     .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 18px;
-      padding: 16px;
-      margin-bottom: 14px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-      position: relative;
-      overflow: hidden;
+      position: relative; background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0) 60%), var(--surface);
+      border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-bottom: 12px; overflow: hidden;
     }
-    .card-title {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      letter-spacing: -0.2px;
-    }
-    .card-title .icon-tag {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-    .badge {
-      font-size: 11px;
-      padding: 3px 9px;
-      border-radius: 12px;
-      font-weight: 600;
-      background: rgba(56, 189, 248, 0.12);
-      color: var(--accent);
-      border: 1px solid rgba(56, 189, 248, 0.2);
-    }
+    .card.tight { padding: 14px; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 10px; }
+    .eyebrow { font-size: 12px; font-weight: 600; color: var(--text-3); letter-spacing: 0.06em; text-transform: uppercase; }
+    .card-title { font-size: 15px; font-weight: 600; }
+    .link { font-size: 13px; font-weight: 600; color: var(--room); }
+    .muted { color: var(--text-2); }
+    .faint { color: var(--text-3); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-2 > .card { margin-bottom: 0; }
+    .stack-12 > * + * { margin-top: 12px; }
 
-    /* Tab 1: Top Activity Rings Widget */
-    .rings-card {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 18px 16px;
-      background: linear-gradient(145deg, #121A2D, #0E1626);
-      border: 1px solid rgba(56, 189, 248, 0.2);
-    }
-    .rings-svg-wrap {
-      position: relative;
-      width: 100px;
-      height: 100px;
-      flex-shrink: 0;
-    }
-    .rings-svg {
-      width: 100%;
-      height: 100%;
-      transform: rotate(-90deg);
-    }
-    .ring-bg {
-      fill: none;
-      stroke-width: 7;
-      opacity: 0.15;
-    }
-    .ring-val {
-      fill: none;
-      stroke-width: 7;
-      stroke-linecap: round;
-      transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .rings-center {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-    }
-    .rings-score {
-      font-size: 20px;
-      font-weight: 800;
-      font-variant-numeric: tabular-nums;
-      color: var(--text-main);
-      line-height: 1;
-    }
-    .rings-score-label {
-      font-size: 9px;
-      text-transform: uppercase;
-      font-weight: 700;
-      color: var(--cyan);
-      margin-top: 2px;
-    }
-    .rings-legend {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-    }
-    .legend-dot-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--text-sub);
-    }
-    .legend-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-    .legend-val {
-      font-weight: 700;
-      color: var(--text-main);
-      font-variant-numeric: tabular-nums;
-    }
+    /* Entrance motion: staggered rise. --i set per element. */
+    .rise { opacity: 0; transform: translateY(14px) scale(0.985); animation: rise 0.6s var(--ease-out) forwards; animation-delay: calc(var(--i, 0) * 55ms); }
+    @keyframes rise { to { opacity: 1; transform: none; } }
+    .view-enter { animation: viewIn 0.42s var(--ease-out); }
+    @keyframes viewIn { from { opacity: 0; transform: translateX(var(--dir, 18px)); } }
 
-    /* Jarvis Briefing Card */
-    .jarvis-card {
-      background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(18, 26, 45, 0.9));
-      border: 1px solid rgba(129, 140, 248, 0.25);
-      position: relative;
-    }
-    .jarvis-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .jarvis-avatar {
-      width: 26px;
-      height: 26px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #818CF8, #38BDF8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-    }
-    .jarvis-name {
-      font-size: 13px;
-      font-weight: 700;
-      color: #A5B4FC;
-    }
-    .jarvis-body {
-      font-size: 13px;
-      line-height: 1.5;
-      color: var(--text-main);
-      margin-bottom: 10px;
-    }
-    .jarvis-action-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(56, 189, 248, 0.12);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      padding: 6px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--accent);
-      cursor: pointer;
-    }
-    .jarvis-action-pill:active {
-      transform: scale(0.97);
-    }
+    /* Hero */
+    .hero { padding: 20px; background:
+      radial-gradient(120% 90% at 100% 0%, rgba(245,181,71,0.16), transparent 55%),
+      radial-gradient(90% 80% at 0% 100%, rgba(76,195,255,0.10), transparent 60%), var(--surface); }
+    .hero-row { display: flex; align-items: center; gap: 16px; }
+    .hero-main { flex: 1; min-width: 0; }
+    .big-num { font-size: 34px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; margin: 6px 0 4px; white-space: nowrap; }
+    .big-num .unit { font-size: 18px; font-weight: 600; color: var(--text-2); margin-left: 3px; }
+    .hero-sub { font-size: 13px; color: var(--text-2); line-height: 1.45; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .pill.good { background: rgba(61,220,151,0.13); color: var(--good); }
+    .pill.warn { background: rgba(245,181,71,0.14); color: var(--warn); }
+    .pill.bad { background: rgba(255,107,107,0.14); color: var(--bad); }
+    .pill.neutral { background: var(--surface-3); color: var(--text-2); }
 
-    /* Quick Stats Grid */
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .quick-box {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 14px;
-      padding: 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .quick-icon {
-      font-size: 24px;
-      flex-shrink: 0;
-    }
-    .quick-title {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-sub);
-      text-transform: uppercase;
-      margin-bottom: 2px;
-    }
-    .quick-val {
-      font-size: 15px;
-      font-weight: 800;
-      color: var(--text-main);
-      font-variant-numeric: tabular-nums;
-    }
+    /* Rings */
+    .rings { width: 118px; height: 118px; flex-shrink: 0; position: relative; }
+    .rings svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .rings circle { fill: none; stroke-linecap: round; }
+    .rings .track { stroke: rgba(255,255,255,0.06); }
+    .rings .val { stroke-dasharray: 100 100; stroke-dashoffset: 100; transition: stroke-dashoffset 1.4s var(--ease-out); }
+    .rings-center { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+    .rings-center b { font-size: 20px; font-weight: 800; display: block; letter-spacing: -0.02em; line-height: 1; }
+    .rings-center span { font-size: 8.5px; color: var(--text-3); font-weight: 700; letter-spacing: 0.08em; }
+    .legend { display: flex; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
+    .legend div { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-2); }
+    .legend i { width: 8px; height: 8px; border-radius: 50%; }
+    .legend b { color: var(--text); font-weight: 600; }
 
-    /* Tab 2: Money Tab Hero & Pacing */
-    .money-hero {
-      text-align: center;
-      padding: 20px 16px;
-      background: radial-gradient(circle at top, rgba(245, 158, 11, 0.12) 0%, rgba(18, 26, 45, 0.6) 80%);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-    }
-    .money-hero-sub {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--amber);
-      margin-bottom: 6px;
-    }
-    .money-hero-val {
-      font-size: 32px;
-      font-weight: 800;
-      color: var(--text-main);
-      letter-spacing: -1px;
-      font-variant-numeric: tabular-nums;
-      margin-bottom: 8px;
-    }
-    .money-hero-desc {
-      font-size: 12px;
-      color: var(--text-sub);
-    }
+    /* Quick actions */
+    .quick { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 12px; }
+    .qa { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 12px 4px 10px; border-radius: 18px;
+      background: var(--surface); border: 1px solid var(--line); font-size: 11.5px; font-weight: 600; color: var(--text-2);
+      transition: transform 0.25s var(--ease-spring), background 0.2s; }
+    .qa:active { transform: scale(0.9); background: var(--surface-2); }
+    .qa .ico { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; font-size: 18px; }
 
-    /* Pacing Budget Bar */
-    .pacing-track {
-      position: relative;
-      height: 14px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      overflow: visible;
-      margin: 14px 0 10px 0;
-    }
-    .pacing-fill {
-      height: 100%;
-      border-radius: 8px;
-      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .pacing-notch {
-      position: absolute;
-      top: -4px;
-      width: 3px;
-      height: 22px;
-      background: #FFFFFF;
-      border-radius: 2px;
-      box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
-      z-index: 2;
-    }
-    .pacing-notch-label {
-      position: absolute;
-      top: 22px;
-      transform: translateX(-50%);
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--text-sub);
-      white-space: nowrap;
-    }
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--text-sub);
-      margin-top: 6px;
-      font-variant-numeric: tabular-nums;
-    }
+    /* Jarvis */
+    .jarvis { display: flex; gap: 12px; }
+    .orb { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; position: relative;
+      background: radial-gradient(circle at 35% 30%, #9EE7FF, #4C7DFF 55%, #6E3BFF); box-shadow: 0 0 22px rgba(92,120,255,0.45); }
+    .orb::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 1px solid rgba(140,170,255,0.35); animation: pulse 2.6s ease-out infinite; }
+    @keyframes pulse { from { transform: scale(0.85); opacity: 1; } to { transform: scale(1.35); opacity: 0; } }
+    .jarvis p { font-size: 13.5px; line-height: 1.55; color: var(--text-2); }
+    .jarvis p b { color: var(--text); font-weight: 600; }
+    .next-step { margin-top: 12px; display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 14px;
+      background: var(--surface-2); font-size: 13px; font-weight: 500; width: 100%; text-align: left; }
+    .next-step .arrow { margin-left: auto; color: var(--text-3); }
 
-    /* Unclassified Pending Inbox */
-    .inbox-card {
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      background: linear-gradient(145deg, #182236, #121A2D);
-    }
-    .inbox-item {
-      background: var(--card-sub);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 10px 12px;
-      margin-bottom: 8px;
-    }
-    .inbox-item-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-    .inbox-item-desc {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-    .inbox-item-amt {
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--amber);
-      font-variant-numeric: tabular-nums;
-    }
-    .inbox-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 6px;
-    }
-    .chip-btn {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: var(--text-main);
-      padding: 4px 8px;
-      border-radius: 8px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      transition: all 0.15s;
-    }
-    .chip-btn:active {
-      transform: scale(0.94);
-      background: rgba(56, 189, 248, 0.2);
-      border-color: var(--accent);
-    }
-    .btn-del-exp {
-      background: rgba(244, 63, 94, 0.08);
-      border: 1px solid rgba(244, 63, 94, 0.25);
-      color: var(--rose);
-      border-radius: 6px;
-      width: 22px;
-      height: 22px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      cursor: pointer;
-      padding: 0;
-      transition: all 0.15s ease;
-    }
-    .btn-del-exp:active {
-      background: rgba(244, 63, 94, 0.3);
-      transform: scale(0.9);
-    }
+    /* Lists */
+    .list { display: flex; flex-direction: column; }
+    .row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--line); width: 100%; text-align: left;
+      transition: opacity 0.3s, transform 0.35s var(--ease-out); }
+    .row:first-child { border-top: 0; padding-top: 2px; }
+    .row .ico { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-size: 17px; background: var(--surface-2); flex-shrink: 0; }
+    .row .main { flex: 1; min-width: 0; }
+    .row .t { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .row .s { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+    .row .amt { font-size: 14px; font-weight: 600; white-space: nowrap; }
+    .row.leaving { opacity: 0; transform: translateX(40px); }
+    .day-label { font-size: 12px; font-weight: 600; color: var(--text-3); margin: 14px 0 2px; display: flex; justify-content: space-between; }
+    .day-label:first-child { margin-top: 0; }
 
-    /* Heatmap Grid (GitHub style) */
-    .heatmap-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 5px;
-      margin-top: 10px;
-    }
-    .heat-cell {
-      aspect-ratio: 1;
-      border-radius: 6px;
-      background: #141D30;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--text-sub);
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      cursor: pointer;
-      position: relative;
-    }
-    .heat-cell.today {
-      border: 1px solid var(--accent);
-    }
-    .heat-cell.level-1 { background: rgba(245, 158, 11, 0.25); color: #FCD34D; }
-    .heat-cell.level-2 { background: rgba(245, 158, 11, 0.55); color: #FFFFFF; font-weight: 800; }
-    .heat-cell.level-3 { background: rgba(244, 63, 94, 0.85); color: #FFFFFF; font-weight: 800; }
+    /* Inbox chips */
+    .inbox-item { padding: 12px; border-radius: 16px; background: var(--surface-2); margin-top: 10px; transition: opacity .3s, transform .35s var(--ease-out); }
+    .inbox-item.leaving { opacity: 0; transform: scale(0.96); }
+    .inbox-top { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chip { padding: 7px 11px; border-radius: 999px; background: var(--surface-3); font-size: 12.5px; font-weight: 500; border: 1px solid transparent;
+      transition: transform 0.2s var(--ease-spring), background 0.2s, border-color 0.2s; }
+    .chip:active { transform: scale(0.92); }
+    .chip.sel { background: var(--money-soft); border-color: rgba(245,181,71,0.5); color: var(--money); }
 
-    /* SVG Donut & Charts */
-    .donut-wrap {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-top: 8px;
-    }
-    .donut-svg {
-      width: 100px;
-      height: 100px;
-      flex-shrink: 0;
-      transform: rotate(-90deg);
-    }
-    .cat-list {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .cat-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-    }
+    /* Bars */
+    .bar { height: 10px; border-radius: 99px; background: rgba(255,255,255,0.06); position: relative; overflow: visible; }
+    .bar > .fill { position: absolute; inset: 0 auto 0 0; border-radius: 99px; width: 0; transition: width 1.1s var(--ease-out); }
+    .bar > .mark { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--text); border-radius: 2px; opacity: 0.7; }
+    .bar.thin { height: 6px; }
+    .kv { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--text-2); margin-top: 8px; }
 
-    /* Tab 3: Sleep Stages Stacked Bar */
-    .sleep-bar-wrap {
-      height: 24px;
-      border-radius: 8px;
-      display: flex;
-      overflow: hidden;
-      margin: 12px 0 8px 0;
-      background: rgba(255, 255, 255, 0.06);
-    }
-    .sleep-seg {
-      height: 100%;
-      position: relative;
-    }
-    .sleep-seg.deep { background: var(--indigo); }
-    .sleep-seg.rem { background: var(--cyan); }
-    .sleep-seg.core { background: var(--purple); }
-    .sleep-seg.awake { background: var(--amber); }
+    /* Segmented */
+    .seg { display: flex; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 12px; position: relative; }
+    .seg button { flex: 1; padding: 9px 4px; font-size: 13px; font-weight: 600; color: var(--text-3); position: relative; z-index: 1; transition: color 0.25s; }
+    .seg button.on { color: var(--text); }
+    .seg .thumb { position: absolute; top: 4px; bottom: 4px; left: 4px; border-radius: 10px; background: var(--surface-3); transition: transform 0.35s var(--ease-out), width 0.35s var(--ease-out); }
 
-    /* HRV / RHR Baseline Track */
-    .baseline-track {
-      position: relative;
-      height: 10px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 6px;
-      margin: 14px 0 8px 0;
-    }
-    .baseline-band {
-      position: absolute;
-      top: 0;
-      height: 100%;
-      background: rgba(16, 185, 129, 0.3);
-      border-radius: 6px;
-      border: 1px dashed rgba(16, 185, 129, 0.6);
-    }
-    .baseline-pointer {
-      position: absolute;
-      top: -5px;
-      width: 8px;
-      height: 20px;
-      background: #FFFFFF;
-      border-radius: 4px;
-      box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
-      transform: translateX(-50%);
-    }
+    /* Charts */
+    .bars14 { display: flex; align-items: flex-end; gap: 5px; height: 120px; position: relative; padding-top: 6px; }
+    .bars14 .col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; }
+    .bars14 .b { width: 100%; height: calc(100% - 20px); border-radius: 6px 6px 3px 3px; background: rgba(245,181,71,0.32); transform: scaleY(0); transform-origin: bottom;
+      transition: transform 0.8s var(--ease-out), background 0.2s; min-height: 3px; }
+    .bars14 .col.today .b { background: var(--money); }
+    .bars14 .col.over .b { background: rgba(255,107,107,0.55); }
+    .bars14 .col.sel .b { background: var(--text); }
+    .bars14 .lbl { font-size: 9.5px; color: var(--text-3); font-weight: 500; height: 14px; line-height: 14px; }
+    .bars14 .limit { position: absolute; left: 0; right: 0; border-top: 1px dashed rgba(255,255,255,0.22); pointer-events: none; }
+    .tip { font-size: 12.5px; color: var(--text-2); margin-top: 10px; min-height: 18px; }
 
-    /* List items */
-    .list-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 9px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .list-item:last-child {
-      border-bottom: none;
-    }
-    .item-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .item-icon {
-      font-size: 16px;
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .item-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-    .item-sub {
-      font-size: 11px;
-      color: var(--text-sub);
-    }
-    .item-amt {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-main);
-      font-variant-numeric: tabular-nums;
-    }
+    .donut-wrap { display: flex; align-items: center; gap: 16px; }
+    .donut { width: 112px; height: 112px; flex-shrink: 0; position: relative; }
+    .donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .donut circle { fill: none; stroke-width: 13; transition: stroke-dasharray 1.1s var(--ease-out); }
+    .donut .c { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; font-size: 11px; color: var(--text-3); }
+    .donut .c b { display: block; font-size: 15px; color: var(--text); }
+    .cat-list { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+    .cat-line { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+    .cat-line i { width: 8px; height: 8px; border-radius: 3px; flex-shrink: 0; }
+    .cat-line span { flex: 1; min-width: 0; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* Bottom Tab Bar */
-    .tab-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: calc(56px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 0px)));
-      padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 0px));
-      background: rgba(18, 26, 45, 0.92);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid var(--card-border);
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      z-index: 100;
-    }
-    .tab-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-sub);
-      font-size: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .tab-item .tab-icon {
-      font-size: 18px;
-      margin-bottom: 2px;
-      transition: transform 0.15s;
-    }
-    .tab-item.active {
-      color: var(--accent);
-    }
-    .tab-item.active .tab-icon {
-      transform: scale(1.15);
-    }
+    .spark { width: 100%; height: 70px; display: block; overflow: visible; }
+    .spark path.line { fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.6s var(--ease-out); }
+    .spark path.area { opacity: 0; transition: opacity 1s 0.6s; }
+    .spark.drawn path.line { stroke-dashoffset: 0; }
+    .spark.drawn path.area { opacity: 1; }
 
-    /* Floating Action Button (+) */
-    .fab {
-      position: fixed;
-      bottom: calc(max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 0px)) + 68px);
-      right: 16px;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #38BDF8, #6366F1);
-      color: #FFFFFF;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      font-weight: 300;
-      box-shadow: 0 4px 18px rgba(56, 189, 248, 0.4);
-      cursor: pointer;
-      z-index: 99;
-      border: none;
-      transition: transform 0.2s;
-    }
-    .fab:active {
-      transform: scale(0.9);
-    }
+    /* Stat tiles */
+    .stat .lbl { font-size: 12px; color: var(--text-3); font-weight: 500; }
+    .stat .val { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-top: 6px; }
+    .stat .val small { font-size: 13px; color: var(--text-2); font-weight: 500; margin-left: 2px; }
+    .stat .foot { font-size: 12px; color: var(--text-3); margin-top: 4px; }
 
-    /* Modal Sheet */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      z-index: 200;
-      display: none;
-      align-items: flex-end;
-    }
-    .modal-overlay.open {
-      display: flex;
-    }
-    .modal-sheet {
-      background: #121A2D;
-      border-top: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 24px 24px 0 0;
-      padding: 20px 16px calc(24px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px))) 16px;
-      width: 100%;
-      max-height: 85vh;
-      overflow-y: auto;
-      animation: slideUp 0.25s ease;
-    }
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
-    }
-    .modal-title {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .input-group {
-      margin-bottom: 14px;
-    }
-    .input-label {
-      font-size: 12px;
-      color: var(--text-sub);
-      font-weight: 600;
-      margin-bottom: 6px;
-      display: block;
-    }
-    .input-box {
-      width: 100%;
-      background: var(--card-sub);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 12px;
-      color: var(--text-main);
-      font-size: 15px;
-      outline: none;
-    }
-    .input-box:focus {
-      border-color: var(--accent);
-    }
-    .btn-submit {
-      width: 100%;
-      background: linear-gradient(135deg, #38BDF8, #6366F1);
-      border: none;
-      color: #FFFFFF;
-      padding: 13px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 8px;
-    }
-    .btn-submit:active {
-      transform: scale(0.98);
-    }
+    /* Gauge */
+    .gauge { position: relative; width: 150px; height: 88px; margin: 0 auto; }
+    .gauge svg { width: 100%; height: 100%; overflow: visible; }
+    .gauge path { fill: none; stroke-width: 12; stroke-linecap: round; }
+    .gauge .val { stroke-dasharray: 100 100; stroke-dashoffset: 100; transition: stroke-dashoffset 1.4s var(--ease-out); }
+    .gauge .c { position: absolute; left: 0; right: 0; bottom: 0; text-align: center; }
+    .gauge .c b { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; }
 
-    .loading {
-      text-align: center;
-      padding: 40px 0;
-      color: var(--text-sub);
-      font-size: 14px;
+    .stages { display: flex; height: 12px; border-radius: 99px; overflow: hidden; gap: 2px; margin-top: 12px; }
+    .stages i { display: block; height: 100%; transform: scaleX(0); transform-origin: left; transition: transform 1s var(--ease-out); }
+
+    /* Room */
+    .room-big { display: flex; align-items: flex-end; gap: 18px; }
+    .room-big .t { font-size: 52px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+    .room-big .t sup { font-size: 20px; font-weight: 600; color: var(--text-2); vertical-align: top; margin-left: 2px; }
+    .live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+    .live i { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 0 rgba(61,220,151,0.6); animation: live 2s infinite; }
+    .live.off i { background: var(--text-3); animation: none; }
+    @keyframes live { 70% { box-shadow: 0 0 0 8px rgba(61,220,151,0); } 100% { box-shadow: 0 0 0 0 rgba(61,220,151,0); } }
+
+    /* Tasks */
+    .task { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); transition: opacity 0.35s, transform 0.4s var(--ease-out); }
+    .task:first-child { border-top: 0; }
+    .check { width: 26px; height: 26px; border-radius: 9px; border: 2px solid var(--line-2); flex-shrink: 0; display: grid; place-items: center;
+      transition: background 0.25s, border-color 0.25s, transform 0.3s var(--ease-spring); }
+    .check svg { width: 14px; height: 14px; stroke: #07090F; stroke-width: 3.2; fill: none; stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset 0.35s 0.08s var(--ease-out); }
+    .task.done .check { background: var(--move); border-color: var(--move); transform: scale(1.12); }
+    .task.done .check svg { stroke-dashoffset: 0; }
+    .task.done .t { text-decoration: line-through; color: var(--text-3); }
+    .task.gone { opacity: 0; transform: translateX(30px); }
+    .task .main { flex: 1; min-width: 0; }
+    .task .t { font-size: 14px; font-weight: 500; transition: color 0.3s; }
+    .task .s { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+    .task .more { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--text-3); }
+
+    /* Empty + error */
+    .empty { text-align: center; padding: 18px 8px; color: var(--text-3); font-size: 13px; line-height: 1.5; }
+    .empty .e { font-size: 28px; display: block; margin-bottom: 6px; }
+
+    /* Skeleton */
+    .sk { border-radius: var(--radius); background: var(--surface); margin-bottom: 12px; position: relative; overflow: hidden; }
+    .sk::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent); animation: shimmer 1.3s infinite; }
+    @keyframes shimmer { to { transform: translateX(100%); } }
+
+    /* Tab bar */
+    .tabbar {
+      position: fixed; left: 12px; right: 12px; bottom: calc(var(--safe-bottom) + 10px); z-index: 20; max-width: 536px; margin: 0 auto;
+      display: flex; padding: 6px; border-radius: 24px; background: rgba(17,22,31,0.82);
+      border: 1px solid var(--line-2); backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%);
+    }
+    .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 6px; font-size: 10.5px; font-weight: 600;
+      color: var(--text-3); position: relative; z-index: 1; transition: color 0.25s; }
+    .tab svg { width: 21px; height: 21px; transition: transform 0.35s var(--ease-spring); }
+    .tab.on { color: var(--text); }
+    .tab.on svg { transform: translateY(-1px) scale(1.08); }
+    .tab-ind { position: absolute; top: 6px; bottom: 6px; left: 6px; border-radius: 18px; background: rgba(255,255,255,0.07); transition: transform 0.4s var(--ease-out); }
+    .badge { position: absolute; top: 4px; right: calc(50% - 18px); min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px; background: var(--task);
+      color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; }
+
+    /* Sheet */
+    .scrim { position: fixed; inset: 0; background: rgba(0,0,0,0.55); opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 40; }
+    .scrim.open { opacity: 1; pointer-events: auto; }
+    .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; max-height: 88vh; overflow-y: auto; max-width: 560px; margin: 0 auto;
+      background: var(--bg-2); border-top: 1px solid var(--line-2); border-radius: 26px 26px 0 0;
+      padding: 10px 18px calc(var(--safe-bottom) + 20px); transform: translateY(105%); transition: transform 0.45s var(--ease-out); }
+    .sheet.open { transform: none; }
+    .grab { width: 38px; height: 5px; border-radius: 9px; background: var(--line-2); margin: 0 auto 14px; }
+    .sheet h3 { font-size: 18px; font-weight: 700; margin-bottom: 14px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-3); margin-bottom: 7px; letter-spacing: 0.03em; }
+    .input { width: 100%; padding: 13px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line-2); outline: none; font-size: 15px;
+      transition: border-color 0.2s; }
+    .input:focus { border-color: rgba(76,195,255,0.6); }
+    .amount-input { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; text-align: center; padding: 14px; }
+    .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .cat-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 2px; border-radius: 14px; background: var(--surface);
+      border: 1px solid var(--line); font-size: 11px; font-weight: 500; color: var(--text-2); transition: transform 0.2s var(--ease-spring), border-color 0.2s, background 0.2s; }
+    .cat-btn span { font-size: 20px; }
+    .cat-btn.sel { border-color: rgba(245,181,71,0.6); background: var(--money-soft); color: var(--text); }
+    .cat-btn:active { transform: scale(0.92); }
+    .btn { width: 100%; padding: 15px; border-radius: 16px; font-weight: 700; font-size: 15px; background: var(--text); color: #07090F;
+      transition: transform 0.2s var(--ease-spring), opacity 0.2s; }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.45; }
+    .btn.ghost { background: var(--surface-2); color: var(--text); }
+    .btn.danger { background: rgba(255,107,107,0.14); color: var(--bad); }
+    .btn-row { display: flex; gap: 10px; }
+    .mood-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .mood-btn { padding: 12px 4px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); text-align: center; font-size: 11px; color: var(--text-2);
+      transition: transform 0.25s var(--ease-spring), border-color 0.2s; }
+    .mood-btn span { display: block; font-size: 26px; margin-bottom: 4px; }
+    .mood-btn:active { transform: scale(0.9); }
+
+    /* Toast */
+    .toast { position: fixed; left: 16px; right: 16px; bottom: calc(var(--safe-bottom) + 92px); z-index: 60; max-width: 528px; margin: 0 auto; display: flex; align-items: center; gap: 10px;
+      padding: 13px 14px; border-radius: 16px; background: #F3F5FA; color: #0B0F17; font-size: 13.5px; font-weight: 600;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35); transform: translateY(140%); opacity: 0; pointer-events: none;
+      transition: transform 0.45s var(--ease-spring), opacity 0.3s; }
+    .toast.show { transform: none; opacity: 1; pointer-events: auto; }
+    .toast.err { background: #FFE3E3; color: #6B0F0F; }
+    .toast button { margin-left: auto; font-weight: 700; color: #2457D6; padding: 2px 4px; }
+
+    /* Privacy */
+    body.private .money { filter: blur(8px); transition: filter 0.3s; }
+
+    /* Confetti-free celebration: a soft burst behind completed tasks */
+    .burst { position: fixed; width: 10px; height: 10px; border-radius: 50%; pointer-events: none; z-index: 70; animation: burst 0.7s var(--ease-out) forwards; }
+    @keyframes burst { to { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+      .rise { opacity: 1; transform: none; }
+    }
+    @media (max-width: 360px) {
+      .big-num { font-size: 28px; }
+      .rings { width: 100px; height: 100px; }
+      .quick { gap: 6px; }
     }
   </style>
 </head>
 <body>
-  <!-- Header -->
-  <div class="header">
-    <div class="brand">
-      <span>LongOS</span>
-      <span class="brand-sub">2D HUD</span>
-    </div>
-    <div class="header-actions">
-      <button class="icon-btn" id="privacyBtn" title="Chế độ riêng tư (che tiền)">👁️</button>
-      <button class="icon-btn" id="refreshBtn" title="Làm mới">↻</button>
-    </div>
-  </div>
-
-  <!-- Main Dynamic View Container -->
-  <div id="content">
-    <div class="loading">Đang kết nối LongOS Core...</div>
-  </div>
-
-  <!-- Floating Quick Entry Button (+) -->
-  <button class="fab" id="fabBtn" title="Nhập nhanh">+</button>
-
-  <!-- Bottom Navigation Bar -->
-  <div class="tab-bar">
-    <div class="tab-item active" data-tab="today">
-      <div class="tab-icon">🏠</div>
-      <div>Hôm nay</div>
-    </div>
-    <div class="tab-item" data-tab="money">
-      <div class="tab-icon">💸</div>
-      <div>Tiền</div>
-    </div>
-    <div class="tab-item" data-tab="health">
-      <div class="tab-icon">🩺</div>
-      <div>Sức khỏe</div>
-    </div>
-    <div class="tab-item" data-tab="room">
-      <div class="tab-icon">🚪</div>
-      <div>Phòng</div>
-    </div>
-    <div class="tab-item" data-tab="tasks">
-      <div class="tab-icon">📋</div>
-      <div>Việc</div>
-    </div>
-  </div>
-
-  <!-- Quick Entry Modal Overlay -->
-  <div class="modal-overlay" id="quickModal">
-    <div class="modal-sheet">
-      <div class="modal-title">
-        <span>⚡ Nhập Nhanh</span>
-        <span style="cursor:pointer;font-size:20px;" id="closeModalBtn">✕</span>
-      </div>
-      <div class="grid-2" style="margin-bottom:14px;">
-        <button class="chip-btn" id="quickWaterBtn" style="padding:10px;justify-content:center;">💧 +250ml Nước</button>
-        <button class="chip-btn" id="quickFocusBtn" style="padding:10px;justify-content:center;">🎯 Focus 25m</button>
-      </div>
-      <div class="input-group">
-        <label class="input-label">💸 Thêm Khoản Chi</label>
-        <input type="number" class="input-box" id="quickAmt" placeholder="Số tiền (VD: 45000)">
-      </div>
-      <div class="input-group">
-        <label class="input-label">Danh Mục</label>
-        <div class="inbox-chips" id="quickCatChips">
-          <button class="chip-btn active" data-cat="food">🍽 Ăn uống</button>
-          <button class="chip-btn" data-cat="transport">🚗 Đi lại</button>
-          <button class="chip-btn" data-cat="shopping">🛍 Mua sắm</button>
-          <button class="chip-btn" data-cat="bills">💡 Sinh hoạt</button>
-          <button class="chip-btn" data-cat="entertainment">🎉 Giải trí</button>
-          <button class="chip-btn" data-cat="other">📝 Khác</button>
+  <div class="ambient"><i></i><i></i></div>
+  <div class="app">
+    <main class="scroller" id="scroller">
+      <div class="ptr" id="ptr"><div class="dot"></div></div>
+      <header class="top">
+        <div class="hello">
+          <small id="dateLine">LongOS</small>
+          <h1 id="greet">Xin chào</h1>
         </div>
-      </div>
-      <div class="input-group">
-        <label class="input-label">Nội Dung / Ghi Chú</label>
-        <input type="text" class="input-box" id="quickNote" placeholder="VD: Cơm trưa, Cà phê">
-      </div>
-      <button class="btn-submit" id="saveExpenseBtn">Lưu Chi Tiêu</button>
+        <div class="top-actions">
+          <button class="icon-btn" id="privacyBtn" aria-label="Che số tiền">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button class="icon-btn" id="refreshBtn" aria-label="Làm mới">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+          </button>
+        </div>
+      </header>
+      <div id="view"></div>
+    </main>
 
-      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:18px 0;">
-
-      <div class="input-group">
-        <label class="input-label">📋 Thêm Việc Cần Làm</label>
-        <input type="text" class="input-box" id="quickTaskInput" placeholder="VD: Nộp báo cáo lúc 17h">
-      </div>
-      <button class="btn-submit" id="saveTaskBtn" style="background:#8B5CF6;">Lưu Việc Mới</button>
-    </div>
+    <nav class="tabbar" id="tabbar">
+      <div class="tab-ind" id="tabInd"></div>
+      <button class="tab on" data-tab="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Hôm nay</button>
+      <button class="tab" data-tab="money"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="3"/><path d="M2 10h20"/><path d="M16 15h2"/></svg>Tiền</button>
+      <button class="tab" data-tab="health"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 22l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>Sức khỏe</button>
+      <button class="tab" data-tab="room"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.8V4a2 2 0 1 0-4 0v10.8a4 4 0 1 0 4 0z"/></svg>Phòng</button>
+      <button class="tab" data-tab="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>Việc</button>
+    </nav>
   </div>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="grab"></div><div id="sheetBody"></div></div>
+  <div class="toast" id="toast"><span id="toastText"></span><button id="toastAction" hidden></button></div>
 
   <script>
-    const isLocalOrGh = window.location.hostname === 'localhost' || window.location.hostname.includes('github.io');
-    const API_URL = isLocalOrGh
-      ? 'https://ucgbvsmxljilmgrdfazk.supabase.co/functions/v1/room-telegram?action=dashboard_data'
-      : '?action=dashboard_data';
-    const ACTION_URL = isLocalOrGh
-      ? 'https://ucgbvsmxljilmgrdfazk.supabase.co/functions/v1/room-telegram?action=dashboard_action'
-      : '?action=dashboard_action';
+    var host = window.location.hostname;
+    var isRemote = host === 'localhost' || host === '127.0.0.1' || host.indexOf('github.io') >= 0;
+    var BASE = isRemote ? 'https://ucgbvsmxljilmgrdfazk.supabase.co/functions/v1/room-telegram' : '';
+    var API_URL = BASE + '?action=dashboard_data';
+    var ACTION_URL = BASE + '?action=dashboard_action';
 
-    let dashboardData = null;
-    let currentTab = 'today';
-    let isPrivacy = localStorage.getItem('longos_privacy') === 'true';
+    var tg = window.Telegram && window.Telegram.WebApp;
+    var state = { data: null, tab: 'today', moneyRange: 'month', selDay: null, loading: false, error: null, sheetOpen: false };
+    var TABS = ['today', 'money', 'health', 'room', 'tasks'];
+    var CAT_COLORS = { food: '#F5B547', transport: '#4CC3FF', shopping: '#FF7A8A', bills: '#A48BFA', entertainment: '#3DDC97', health: '#FF9F5A', other: '#8792A8', income: '#3DDC97' };
 
-    // Format VND
-    function fmtVnd(num) {
-      if (num === null || num === undefined) return '-- đ';
-      return Math.round(num).toLocaleString('vi-VN') + ' đ';
+    function store(key, value) {
+      try { if (value === undefined) return localStorage.getItem(key); localStorage.setItem(key, value); } catch (e) { return null; }
+    }
+    function haptic(kind) {
+      try {
+        if (!tg || !tg.HapticFeedback) return;
+        if (kind === 'success' || kind === 'error' || kind === 'warning') tg.HapticFeedback.notificationOccurred(kind);
+        else if (kind === 'select') tg.HapticFeedback.selectionChanged();
+        else tg.HapticFeedback.impactOccurred(kind || 'light');
+      } catch (e) {}
+    }
+    function esc(v) {
+      return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+    }
+    function vnd(n) { return Math.round(Number(n) || 0).toLocaleString('vi-VN'); }
+    function vndShort(n) {
+      n = Number(n) || 0;
+      var a = Math.abs(n);
+      if (a >= 1e9) return (n / 1e9).toFixed(1).replace('.0', '').replace('.', ',') + ' tỷ';
+      if (a >= 1e6) return (n / 1e6).toFixed(a >= 1e7 ? 1 : 2).replace(/\.?0+$/, '').replace('.', ',') + 'tr';
+      if (a >= 1e3) return Math.round(n / 1e3) + 'k';
+      return String(Math.round(n));
+    }
+    function money(n, cls) { return '<span class="money ' + (cls || '') + '">' + vnd(n) + '&nbsp;đ</span>'; }
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function plural(list) { return Array.isArray(list) ? list : []; }
+    function dm(iso) { var p = String(iso || '').split('-'); return p.length === 3 ? Number(p[2]) + '/' + Number(p[1]) : String(iso || ''); }
+
+    /* ---------- Telegram setup ---------- */
+    if (tg) {
+      try {
+        tg.ready(); tg.expand();
+        if (tg.setHeaderColor) tg.setHeaderColor('#07090F');
+        if (tg.setBackgroundColor) tg.setBackgroundColor('#07090F');
+        if (tg.setBottomBarColor) tg.setBottomBarColor('#07090F');
+        if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+        if (tg.BackButton) tg.BackButton.onClick(function () { if (state.sheetOpen) closeSheet(); else switchTab('today'); });
+      } catch (e) {}
+    }
+    function syncBackButton() {
+      if (!tg || !tg.BackButton) return;
+      try { if (state.sheetOpen || state.tab !== 'today') tg.BackButton.show(); else tg.BackButton.hide(); } catch (e) {}
     }
 
-    // Initialize Telegram WebApp
-    if (window.Telegram?.WebApp) {
-      const tg = window.Telegram.WebApp;
-      tg.ready();
-      tg.expand();
-      if (tg.setHeaderColor) tg.setHeaderColor('#090D16');
-      if (tg.setBackgroundColor) tg.setBackgroundColor('#090D16');
-
-      // Safe area padding fallback
-      const topInset = tg.contentSafeAreaInset?.top || tg.safeAreaInset?.top || 0;
-      if (topInset > 0) {
-        document.body.style.paddingTop = `calc(${topInset}px + 20px)`;
-      }
-
-      tg.BackButton.onClick(() => {
-        if (currentTab !== 'today') {
-          switchTab('today');
+    /* ---------- Network ---------- */
+    function authHeaders(extra) {
+      var wa = tg;
+      var diag = 'c=3;sdk=' + (wa ? 1 : 0) + ';plat=' + ((wa && wa.platform) || '-') + ';ver=' + ((wa && wa.version) || '-')
+        + ';init=' + ((wa && wa.initData) ? wa.initData.length : 0) + ';hash=' + (location.hash.indexOf('tgWebAppData') >= 0 ? 1 : 0)
+        + ';user=' + ((wa && wa.initDataUnsafe && wa.initDataUnsafe.user) ? 1 : 0);
+      var h = { 'x-telegram-init-data': (wa && wa.initData) || '', 'x-miniapp-diag': diag };
+      for (var k in (extra || {})) h[k] = extra[k];
+      return h;
+    }
+    function loadData(opts) {
+      opts = opts || {};
+      if (state.loading) return Promise.resolve();
+      state.loading = true;
+      setRefreshing(true);
+      if (!state.data && !opts.silent) renderSkeleton();
+      return fetch(API_URL, { headers: authHeaders() }).then(function (res) {
+        if (res.status === 401) {
+          return res.json().catch(function () { return {}; }).then(function (j) {
+            var hasInit = Boolean(tg && tg.initData);
+            var err = new Error(j.reason === 'expired' ? 'Phiên đã hết hạn. Đóng Mini App rồi mở lại từ /app nhé.'
+              : !hasInit ? 'Telegram chưa gửi thông tin đăng nhập cho trang này. Gõ /app trong bot rồi bấm nút “Mở Dashboard 2D” ngay dưới tin nhắn.'
+              : 'Không xác thực được phiên này (' + (j.reason || 'không rõ') + ').');
+            err.auth = true;
+            throw err;
+          });
         }
+        if (!res.ok) throw new Error('Máy chủ trả lỗi ' + res.status);
+        return res.json();
+      }).then(function (json) {
+        state.data = json; state.error = null;
+        render(opts.silent ? 'silent' : 'enter');
+      }).catch(function (err) {
+        state.error = err;
+        if (!state.data) renderError(err); else toast(err.message || 'Không tải được dữ liệu', true);
+      }).then(function () {
+        state.loading = false; setRefreshing(false);
       });
     }
-
-    function updateBackButton() {
-      if (window.Telegram?.WebApp?.BackButton) {
-        if (currentTab === 'today') {
-          window.Telegram.WebApp.BackButton.hide();
-        } else {
-          window.Telegram.WebApp.BackButton.show();
-        }
-      }
+    function act(body, okText, opts) {
+      opts = opts || {};
+      return fetch(ACTION_URL, { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body) })
+        .then(function (res) { return res.json().catch(function () { return { ok: false }; }); })
+        .then(function (j) {
+          if (!j.ok) throw new Error(j.message || 'Chưa lưu được, thử lại nhé');
+          haptic('success');
+          if (okText !== false) toast(okText || j.message || 'Đã lưu', false, opts.undo);
+          loadData({ silent: true });
+          return j;
+        })
+        .catch(function (err) { haptic('error'); toast(err.message || 'Có lỗi xảy ra', true); throw err; });
     }
 
-    // Toggle Privacy Mode
-    const privacyBtn = document.getElementById('privacyBtn');
+    /* ---------- Chrome ---------- */
+    var refreshBtn = document.getElementById('refreshBtn');
+    function setRefreshing(on) { refreshBtn.classList.toggle('spin', on); }
+    refreshBtn.addEventListener('click', function () { haptic('light'); loadData({ silent: Boolean(state.data) }); });
+
+    var privacyBtn = document.getElementById('privacyBtn');
     function applyPrivacy() {
-      if (isPrivacy) {
-        document.body.classList.add('privacy-active');
-        privacyBtn.classList.add('active');
-      } else {
-        document.body.classList.remove('privacy-active');
-        privacyBtn.classList.remove('active');
-      }
+      var on = store('longos_privacy') === 'true';
+      document.body.classList.toggle('private', on);
+      privacyBtn.classList.toggle('on', on);
     }
-    privacyBtn.addEventListener('click', () => {
-      isPrivacy = !isPrivacy;
-      localStorage.setItem('longos_privacy', String(isPrivacy));
-      applyPrivacy();
+    privacyBtn.addEventListener('click', function () {
+      store('longos_privacy', String(store('longos_privacy') !== 'true'));
+      applyPrivacy(); haptic('select');
     });
     applyPrivacy();
 
-    // Tab Navigation
-    document.querySelectorAll('.tab-item').forEach(el => {
-      el.addEventListener('click', () => {
-        const tab = el.dataset.tab;
-        switchTab(tab);
-      });
-    });
+    function greetText() {
+      var h = new Date().getHours();
+      if (h < 5) return 'Khuya rồi, nghỉ thôi 🌙';
+      if (h < 11) return 'Chào buổi sáng ☀️';
+      if (h < 14) return 'Buổi trưa vui vẻ 🍱';
+      if (h < 18) return 'Chiều năng lượng 🌤️';
+      if (h < 22) return 'Buổi tối thư thả 🌆';
+      return 'Sắp đến giờ ngủ 🌙';
+    }
+    function updateHeader() {
+      var d = new Date();
+      var days = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];
+      document.getElementById('dateLine').textContent = days[d.getDay()] + ', ' + d.getDate() + ' tháng ' + (d.getMonth() + 1);
+      document.getElementById('greet').textContent = greetText();
+    }
+    updateHeader();
 
+    /* ---------- Tabs ---------- */
+    var tabbar = document.getElementById('tabbar');
+    var tabInd = document.getElementById('tabInd');
+    function placeIndicator() {
+      var btn = tabbar.querySelector('.tab.on');
+      if (!btn) return;
+      tabInd.style.width = btn.offsetWidth + 'px';
+      tabInd.style.transform = 'translateX(' + (btn.offsetLeft - 6) + 'px)';
+    }
     function switchTab(tab) {
-      currentTab = tab;
-      document.querySelectorAll('.tab-item').forEach(t => {
-        t.classList.toggle('active', t.dataset.tab === tab);
+      if (!tab || tab === state.tab) return;
+      var dir = TABS.indexOf(tab) > TABS.indexOf(state.tab) ? '18px' : '-18px';
+      state.tab = tab;
+      tabbar.querySelectorAll('.tab').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === tab); });
+      placeIndicator(); haptic('select'); syncBackButton();
+      document.getElementById('scroller').scrollTo({ top: 0 });
+      document.getElementById('view').style.setProperty('--dir', dir);
+      render('enter');
+    }
+    tabbar.addEventListener('click', function (e) { var b = e.target.closest('.tab'); if (b) switchTab(b.dataset.tab); });
+    window.addEventListener('resize', placeIndicator);
+    setTimeout(placeIndicator, 50);
+
+    /* ---------- Rendering ---------- */
+    var view = document.getElementById('view');
+    function renderSkeleton() {
+      view.innerHTML = '<div class="sk" style="height:190px"></div><div class="sk" style="height:84px"></div><div class="sk" style="height:130px"></div><div class="sk" style="height:220px"></div>';
+    }
+    function renderError(err) {
+      view.innerHTML = '<div class="card rise" style="--i:0"><div class="empty"><span class="e">' + (err.auth ? '🔐' : '📡') + '</span>'
+        + '<div style="color:var(--text);font-weight:600;font-size:15px;margin-bottom:6px">' + (err.auth ? 'Chưa đăng nhập được' : 'Không kết nối được máy chủ') + '</div>'
+        + esc(err.message) + '</div><button class="btn ghost" id="retryBtn" style="margin-top:6px">Thử lại</button></div>';
+      document.getElementById('retryBtn').addEventListener('click', function () { loadData(); });
+    }
+    function render(mode) {
+      var d = state.data;
+      if (!d) return;
+      var html = { today: viewToday, money: viewMoney, health: viewHealth, room: viewRoom, tasks: viewTasks }[state.tab](d);
+      view.innerHTML = html;
+      if (mode === 'enter') { view.classList.remove('view-enter'); void view.offsetWidth; view.classList.add('view-enter'); }
+      else view.querySelectorAll('.rise').forEach(function (el) { el.classList.remove('rise'); });
+      updateBadge(d);
+      requestAnimationFrame(function () { requestAnimationFrame(function () { animateIn(mode); }); });
+    }
+    function updateBadge(d) {
+      var n = plural(d.reminders && d.reminders.pending).length;
+      var tasksTab = tabbar.querySelector('[data-tab="tasks"]');
+      var b = tasksTab.querySelector('.badge');
+      if (n > 0) { if (!b) { b = document.createElement('span'); b.className = 'badge'; tasksTab.appendChild(b); } b.textContent = n > 9 ? '9+' : n; }
+      else if (b) b.remove();
+    }
+    function countUp(el) {
+      var to = Number(el.dataset.to) || 0;
+      var fmt = el.dataset.fmt || 'vnd';
+      var dur = 900, start = performance.now();
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) dur = 1;
+      function frame(t) {
+        var p = clamp((t - start) / dur, 0, 1);
+        var e = 1 - Math.pow(1 - p, 3);
+        var v = to * e;
+        el.textContent = fmt === 'int' ? Math.round(v).toLocaleString('vi-VN') : vnd(v);
+        if (p < 1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+    function animateIn(mode) {
+      view.querySelectorAll('[data-dash]').forEach(function (el) {
+        var v = clamp(Number(el.dataset.dash) || 0, 0, 100);
+        if (v <= 0) el.style.opacity = '0'; // a zero-length round cap would still draw a dot
+        el.style.strokeDashoffset = String(100 - v);
       });
-      updateBackButton();
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-      }
-      if (dashboardData) render();
+      view.querySelectorAll('[data-w]').forEach(function (el) { el.style.width = clamp(Number(el.dataset.w) || 0, 0, 100) + '%'; });
+      view.querySelectorAll('[data-sy]').forEach(function (el) { el.style.transform = 'scaleY(' + clamp(Number(el.dataset.sy) || 0, 0.02, 1) + ')'; });
+      view.querySelectorAll('[data-sx]').forEach(function (el) { el.style.transform = 'scaleX(1)'; });
+      view.querySelectorAll('.spark').forEach(function (el) { el.classList.add('drawn'); });
+      view.querySelectorAll('[data-arc]').forEach(function (el) { el.style.strokeDasharray = el.dataset.arc; });
+      if (mode === 'enter') view.querySelectorAll('[data-to]').forEach(countUp);
+      else view.querySelectorAll('[data-to]').forEach(function (el) { el.textContent = el.dataset.fmt === 'int' ? Number(el.dataset.to).toLocaleString('vi-VN') : vnd(el.dataset.to); });
     }
+    function num(n, fmt) { return '<span data-to="' + (Number(n) || 0) + '" data-fmt="' + (fmt || 'vnd') + '">0</span>'; }
 
-    // Telegram-signed session data; the server rejects requests without it.
-    function authHeaders(extra) {
-      const wa = window.Telegram && window.Telegram.WebApp;
-      // Non-sensitive launch diagnostics so a refused session can be explained from the server log.
-      const diag = 'c=2;sdk=' + (wa ? 1 : 0) + ';plat=' + ((wa && wa.platform) || '-') + ';ver=' + ((wa && wa.version) || '-')
-        + ';init=' + ((wa && wa.initData) ? wa.initData.length : 0) + ';hash=' + (location.hash.indexOf('tgWebAppData') >= 0 ? 1 : 0)
-        + ';user=' + ((wa && wa.initDataUnsafe && wa.initDataUnsafe.user) ? 1 : 0);
-      return Object.assign({ 'x-telegram-init-data': (wa && wa.initData) || '', 'x-miniapp-diag': diag }, extra || {});
+    /* ---------- Views ---------- */
+    function viewToday(d) {
+      var f = d.finances || {}, b = f.budget || {}, h = d.health || {}, rings = h.rings || {};
+      var i = 0;
+      var heroStatus = !b.hasBudget ? '<span class="pill neutral">Chưa đặt ngân sách</span>'
+        : b.isOver ? '<span class="pill bad">Vượt ngân sách</span>'
+        : (b.pacingDiff > 0 ? '<span class="pill warn">Nhanh hơn nhịp ' + vndShort(b.pacingDiff) + '</span>' : '<span class="pill good">Đúng nhịp chi tiêu</span>');
+      var heroValue = b.hasBudget ? b.todayRemaining : f.today;
+      var hero = '<section class="card hero rise" style="--i:' + (i++) + '"><div class="hero-row"><div class="hero-main">'
+        + '<div class="eyebrow">' + (b.hasBudget ? 'Còn được tiêu hôm nay' : 'Đã chi hôm nay') + '</div>'
+        + '<div class="big-num money">' + num(heroValue) + '<span class="unit">đ</span></div>'
+        + '<div class="hero-sub">' + (b.hasBudget ? 'Đã chi ' + money(f.today) + ' · hạn mức ' + money(b.safeDaily) + '/ngày' : 'Tuần này ' + money(f.thisWeek) + ' · tháng này ' + money(f.thisMonth)) + '</div>'
+        + '<div style="margin-top:10px">' + heroStatus + '</div></div>'
+        + ringsSvg(rings) + '</div>'
+        + '<div class="legend"><div><i style="background:var(--sleep)"></i>Ngủ <b>' + (h.sleepFormatted ? esc(h.sleepFormatted) : '—') + '</b></div>'
+        + '<div><i style="background:var(--move)"></i>Bước <b>' + (h.steps ? vnd(h.steps.current) : '—') + '</b></div>'
+        + '<div><i style="background:var(--money)"></i>Ví <b>' + (rings.budget != null ? rings.budget + '%' : '—') + '</b></div></div></section>';
+
+      var quick = '<div class="quick rise" style="--i:' + (i++) + '">'
+        + qa('expense', '💸', 'var(--money-soft)', 'Chi') + qa('income', '💰', 'var(--move-soft)', 'Thu')
+        + qa('water', '💧', 'var(--room-soft)', 'Nước') + qa('mood', d.mood ? d.mood.emoji : '😊', 'var(--sleep-soft)', 'Cảm xúc')
+        + qa('reminder', '⏰', 'var(--task-soft)', 'Nhắc') + '</div>';
+
+      var br = d.briefing || {};
+      var jarvis = '<section class="card rise" style="--i:' + (i++) + '"><div class="jarvis"><div class="orb"></div><div>'
+        + '<div class="card-title" style="margin-bottom:4px">' + esc(br.greeting || 'Jarvis') + '</div><p>' + esc(br.advice || '') + '</p></div></div>'
+        + (br.priorityAction ? '<button class="next-step" data-next="1"><span>🎯</span><span>' + esc(br.priorityAction) + '</span><span class="arrow">›</span></button>' : '')
+        + '</section>';
+
+      var inbox = plural(f.unclassifiedExpenses).length ? inboxCard(f.unclassifiedExpenses, i++) : '';
+
+      var pend = plural(d.reminders && d.reminders.pending);
+      var tasks = '<section class="card rise" style="--i:' + (i++) + '"><div class="card-head"><div class="card-title">Việc hôm nay</div>'
+        + '<button class="link" data-goto="tasks">Tất cả</button></div>'
+        + (pend.length ? '<div class="list">' + pend.slice(0, 3).map(taskRow).join('') + '</div>'
+          : '<div class="empty"><span class="e">✨</span>Không còn việc nào đang chờ. Đã xong ' + ((d.reminders && d.reminders.completedTodayCount) || 0) + ' việc hôm nay.</div>')
+        + '</section>';
+
+      var r = d.room || {};
+      var mini = '<div class="grid-2 rise" style="--i:' + (i++) + ';margin-bottom:12px">'
+        + '<button class="card tight stat" data-goto="room" style="text-align:left"><div class="lbl">🌡️ Phòng</div><div class="val">'
+        + (r.temperature != null ? Number(r.temperature).toFixed(1) + '<small>°C</small>' : '—') + '</div><div class="foot">'
+        + (r.temperature != null ? (r.humidity != null ? Math.round(r.humidity) + '% · ' : '') + esc(r.comfort || '') : 'Chưa có số đo') + '</div></button>'
+        + '<button class="card tight stat" data-goto="health" style="text-align:left"><div class="lbl">🔋 Pin cơ thể</div><div class="val">'
+        + (h.bodyBattery != null ? h.bodyBattery + '<small>%</small>' : '—') + '</div><div class="foot">' + (h.bodyBattery != null ? batteryLabel(h.bodyBattery) : 'Chưa có dữ liệu') + '</div></button></div>';
+
+      return hero + quick + jarvis + inbox + tasks + mini;
     }
-
-    // Load Data
-    async function loadData() {
-      try {
-        const res = await fetch(API_URL, { headers: authHeaders() });
-        if (res.status === 401) {
-          const why = ((await res.json().catch(() => ({}))).reason) || '';
-          const hasInit = Boolean(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData);
-          throw new Error(why === 'expired' ? 'Phiên đã hết hạn, đóng Mini App rồi mở lại từ /app nhé'
-            : !hasInit ? 'Telegram không gửi chữ ký khi mở từ nút này. Gõ /app rồi bấm nút “Mở Dashboard 2D” nhé'
-            : 'Xác thực thất bại (' + why + ')');
-        }
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        dashboardData = await res.json();
-        render();
-      } catch (err) {
-        document.getElementById('content').innerHTML = `
-          <div class="loading" style="color:var(--rose)">
-            ⚠️ Không thể kết nối máy chủ: ${err.message}<br><br>
-            <button class="chip-btn" onclick="loadData()" style="margin:0 auto;">Thử lại</button>
-          </div>
-        `;
-      }
+    function qa(kind, ico, bg, label) {
+      return '<button class="qa" data-quick="' + kind + '"><span class="ico" style="background:' + bg + '">' + ico + '</span>' + label + '</button>';
     }
-
-    document.getElementById('refreshBtn').addEventListener('click', () => {
-      document.getElementById('content').innerHTML = '<div class="loading">Đang làm mới dữ liệu...</div>';
-      loadData();
-    });
-
-    // Post Action helper
-    async function postAction(body) {
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-      }
-      try {
-        const res = await fetch(ACTION_URL, {
-          method: 'POST',
-          headers: authHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify(body),
-        });
-        const resData = await res.json();
-        if (resData.ok) {
-          await loadData();
-          return true;
-        }
-      } catch (err) {
-        alert('Có lỗi xảy ra: ' + err.message);
-      }
-      return false;
+    function ringsSvg(r) {
+      var a = clamp(Number(r.sleep) || 0, 0, 100), s = clamp(Number(r.activity) || 0, 0, 100), m = clamp(Number(r.budget) || 0, 0, 100);
+      return '<div class="rings"><svg viewBox="0 0 120 120">'
+        + '<circle class="track" cx="60" cy="60" r="55" stroke-width="8"/><circle class="val" cx="60" cy="60" r="55" stroke-width="8" stroke="var(--sleep)" pathLength="100" data-dash="' + a + '"/>'
+        + '<circle class="track" cx="60" cy="60" r="45" stroke-width="8"/><circle class="val" cx="60" cy="60" r="45" stroke-width="8" stroke="var(--move)" pathLength="100" data-dash="' + s + '" style="transition-delay:.12s"/>'
+        + '<circle class="track" cx="60" cy="60" r="35" stroke-width="8"/><circle class="val" cx="60" cy="60" r="35" stroke-width="8" stroke="var(--money)" pathLength="100" data-dash="' + m + '" style="transition-delay:.24s"/>'
+        + '</svg><div class="rings-center"><div><b>' + num(r.overallScore || 0, 'int') + '</b><span>ĐIỂM</span></div></div></div>';
     }
+    function batteryLabel(v) { return v >= 75 ? 'Tràn năng lượng' : v >= 50 ? 'Ổn định' : v >= 30 ? 'Cần nghỉ ngơi' : 'Rất mệt'; }
 
-    // RENDER DISPATCHER
-    function render() {
-      if (!dashboardData) return;
-      if (currentTab === 'today') renderToday();
-      else if (currentTab === 'money') renderMoney();
-      else if (currentTab === 'health') renderHealth();
-      else if (currentTab === 'room') renderRoom();
-      else if (currentTab === 'tasks') renderTasks();
+    function inboxCard(items, i) {
+      var cats = plural(state.data.categories).filter(function (c) { return c.key !== 'income'; });
+      return '<section class="card rise" style="--i:' + i + '"><div class="card-head"><div><div class="card-title">Hộp thư chưa phân loại</div>'
+        + '<div class="faint" style="font-size:12px;margin-top:2px">Giao dịch Vietcombank đang chờ bạn xếp mục</div></div><span class="pill warn">' + items.length + '</span></div>'
+        + items.slice(0, 4).map(function (p) {
+          return '<div class="inbox-item" data-pending="' + esc(p.id) + '"><div class="inbox-top"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(p.description) + '</span>'
+            + '<b>' + money(p.amount) + '</b></div><div class="faint" style="font-size:11.5px;margin-top:3px">' + esc(p.date) + '</div>'
+            + '<div class="chips">' + cats.map(function (c) { return '<button class="chip" data-classify="' + esc(c.key) + '">' + c.icon + ' ' + esc(shortCat(c.label)) + '</button>'; }).join('') + '</div></div>';
+        }).join('') + '</section>';
     }
+    function shortCat(label) { return String(label).split(' & ')[0]; }
 
-    // 1. TAB HÔM NAY (OVERVIEW)
-    function renderToday() {
-      const { finances, health, room, reminders, briefing } = dashboardData;
-      const rings = health.rings;
+    function viewMoney(d) {
+      var f = d.finances || {}, b = f.budget || {}, i = 0;
+      var range = state.moneyRange;
+      var total = range === 'today' ? f.today : range === 'week' ? f.thisWeek : f.thisMonth;
+      var seg = segmented([['today', 'Hôm nay'], ['week', 'Tuần'], ['month', 'Tháng']], range, 'range');
 
-      // SVG Ring calculations
-      // Sleep ring (r=42, circumference=263.89)
-      const c1 = 263.89;
-      const off1 = c1 - (c1 * rings.sleep) / 100;
-      // Activity ring (r=30, circumference=188.50)
-      const c2 = 188.50;
-      const off2 = c2 - (c2 * rings.activity) / 100;
-      // Budget ring (r=18, circumference=113.10)
-      const c3 = 113.10;
-      const off3 = c3 - (c3 * rings.budget) / 100;
+      var summary = '<section class="card hero rise" style="--i:' + (i++) + '"><div class="eyebrow">Đã chi ' + (range === 'today' ? 'hôm nay' : range === 'week' ? 'tuần này' : 'tháng này') + '</div>'
+        + '<div class="big-num money">' + num(total) + '<span class="unit">đ</span></div>'
+        + (range === 'month' ? '<div class="hero-sub">Thu tháng này ' + money(f.monthIncome || 0) + ' · cân đối <b class="money" style="color:' + ((f.monthIncome || 0) - f.thisMonth >= 0 ? 'var(--good)' : 'var(--bad)') + '">' + vndShort((f.monthIncome || 0) - f.thisMonth) + '</b></div>' : '')
+        + '</section>';
 
-      let html = `
-        <!-- Activity Rings Hero Widget -->
-        <div class="card rings-card">
-          <div class="rings-svg-wrap">
-            <svg class="rings-svg" viewBox="0 0 100 100">
-              <circle class="ring-bg" cx="50" cy="50" r="42" stroke="var(--purple)"></circle>
-              <circle class="ring-val" cx="50" cy="50" r="42" stroke="var(--purple)" stroke-dasharray="${c1}" stroke-dashoffset="${off1}"></circle>
-
-              <circle class="ring-bg" cx="50" cy="50" r="30" stroke="var(--cyan)"></circle>
-              <circle class="ring-val" cx="50" cy="50" r="30" stroke="var(--cyan)" stroke-dasharray="${c2}" stroke-dashoffset="${off2}"></circle>
-
-              <circle class="ring-bg" cx="50" cy="50" r="18" stroke="var(--amber)"></circle>
-              <circle class="ring-val" cx="50" cy="50" r="18" stroke="var(--amber)" stroke-dasharray="${c3}" stroke-dashoffset="${off3}"></circle>
-            </svg>
-            <div class="rings-center">
-              <div class="rings-score">${rings.overallScore}</div>
-              <div class="rings-score-label">Điểm Ngày</div>
-            </div>
-          </div>
-          <div class="rings-legend">
-            <div class="legend-item">
-              <div class="legend-dot-label">
-                <span class="legend-dot" style="background:var(--purple);"></span>
-                <span>Giấc ngủ</span>
-              </div>
-              <div class="legend-val">${health.sleepFormatted}</div>
-            </div>
-            <div class="legend-item">
-              <div class="legend-dot-label">
-                <span class="legend-dot" style="background:var(--cyan);"></span>
-                <span>Vận động</span>
-              </div>
-              <div class="legend-val">${health.steps.current.toLocaleString('vi-VN')} b</div>
-            </div>
-            <div class="legend-item">
-              <div class="legend-dot-label">
-                <span class="legend-dot" style="background:var(--amber);"></span>
-                <span>Còn tiêu</span>
-              </div>
-              <div class="legend-val privacy-blur">${fmtVnd(finances.budget.todayRemaining)}</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Jarvis Companion Briefing -->
-        <div class="card jarvis-card">
-          <div class="jarvis-header">
-            <div class="jarvis-avatar">🤖</div>
-            <div class="jarvis-name">Jarvis · LongOS Companion</div>
-          </div>
-          <div class="jarvis-body">
-            <strong>${briefing.greeting}</strong><br>
-            ${briefing.advice}
-          </div>
-          <div class="jarvis-action-pill" onclick="handleJarvisAction()">
-            <span>⚡ Việc ưu tiên:</span>
-            <span>${briefing.priorityAction}</span>
-          </div>
-        </div>
-
-        <!-- Quick Glance Grid -->
-        <div class="grid-2">
-          <div class="quick-box" onclick="switchTab('money')" style="cursor:pointer;">
-            <div class="quick-icon">💰</div>
-            <div>
-              <div class="quick-title">Còn Tiêu Hôm Nay</div>
-              <div class="quick-val privacy-blur">${fmtVnd(finances.budget.todayRemaining)}</div>
-            </div>
-          </div>
-          <div class="quick-box" onclick="switchTab('health')" style="cursor:pointer;">
-            <div class="quick-icon">🔋</div>
-            <div>
-              <div class="quick-title">Pin Thể Chất</div>
-              <div class="quick-val">${health.bodyBattery}%</div>
-            </div>
-          </div>
-          <div class="quick-box" onclick="switchTab('room')" style="cursor:pointer;">
-            <div class="quick-icon">🌡️</div>
-            <div>
-              <div class="quick-title">Phòng (${room.comfort})</div>
-              <div class="quick-val">${room.temperature}°C · ${room.humidity}%</div>
-            </div>
-          </div>
-          <div class="quick-box" onclick="switchTab('tasks')" style="cursor:pointer;">
-            <div class="quick-icon">📋</div>
-            <div>
-              <div class="quick-title">Việc Cần Làm</div>
-              <div class="quick-val">${reminders.pending.length} việc</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // Pending VCB Alert banner if exists
-      if (finances.unclassifiedExpenses && finances.unclassifiedExpenses.length > 0) {
-        html += `
-          <div class="card inbox-card">
-            <div class="card-title" style="color:var(--amber);">
-              <span class="icon-tag">📬 ${finances.unclassifiedExpenses.length} Giao Dịch Chờ Phân Loại</span>
-              <span class="badge" style="background:rgba(245,158,11,0.2);color:var(--amber);cursor:pointer;" onclick="switchTab('money')">Xem tất cả</span>
-            </div>
-            ${renderPendingItem(finances.unclassifiedExpenses[0])}
-          </div>
-        `;
-      }
-
-      document.getElementById('content').innerHTML = html;
-    }
-
-    function handleJarvisAction() {
-      const p = dashboardData?.finances?.unclassifiedExpenses;
-      if (p && p.length > 0) switchTab('money');
-      else switchTab('tasks');
-    }
-
-    // 2. TAB TIỀN (MONEY & PACING)
-    function renderMoney() {
-      const { finances, subscriptions } = dashboardData;
-      const b = finances.budget;
-      const isZeroSpentToday = finances.today === 0;
-
-      // Pacing calculation
-      const spentPct = Math.min(100, Math.round(b.percent || 0));
-      const pacingPct = Math.min(100, Math.round(b.pacingPercent || 0));
-      const isUnderPacing = b.pacingDiff <= 0;
-      const pacingColor = isUnderPacing ? 'var(--emerald)' : 'var(--rose)';
-      const pacingText = isUnderPacing
-        ? `✨ Tiết kiệm hơn nhịp độ ${fmtVnd(Math.abs(b.pacingDiff))}`
-        : `⚠️ Đang vượt nhịp độ ${fmtVnd(b.pacingDiff)}`;
-
-      let html = `
-        <!-- Hero: Còn được tiêu hôm nay -->
-        <div class="card money-hero">
-          <div class="money-hero-sub">Còn Được Tiêu Hôm Nay</div>
-          <div class="money-hero-val privacy-blur">${fmtVnd(b.todayRemaining)}</div>
-          <div class="money-hero-desc">
-            ${isZeroSpentToday
-              ? '🎉 Hôm nay chưa chi tiêu gì · Còn nguyên hạn mức an toàn'
-              : `Đã chi hôm nay: <span class="privacy-blur">${fmtVnd(finances.today)}</span> · Hạn mức ngày: ${fmtVnd(b.safeDaily)}`}
-          </div>
-        </div>
-
-        <!-- Pacing Budget Bar -->
-        <div class="card">
-          <div class="card-title">
-            <span class="icon-tag">🎯 Nhịp Độ Ngân Sách Tháng</span>
-            <span class="badge" style="background:rgba(16,185,129,0.15);color:${pacingColor};">${spentPct}%</span>
-          </div>
-
-          <div class="pacing-track">
-            <div class="pacing-fill" style="width:${spentPct}%;background:${spentPct >= 85 ? 'linear-gradient(90deg, #F59E0B, #F43F5E)' : 'linear-gradient(90deg, #10B981, #06B6D4)'};"></div>
-            <div class="pacing-notch" style="left:${pacingPct}%;" title="Nhịp độ lý tưởng">
-              <span class="pacing-notch-label">Nhịp độ ${pacingPct}%</span>
-            </div>
-          </div>
-
-          <div style="font-size:12px;font-weight:700;color:${pacingColor};margin-top:22px;">
-            ${pacingText}
-          </div>
-
-          <div class="meta-row">
-            <span>Đã chi: <strong class="privacy-blur">${fmtVnd(b.spent)}</strong></span>
-            <span>Hạn mức: <strong class="privacy-blur">${fmtVnd(b.amount)}</strong></span>
-          </div>
-          <div class="meta-row">
-            <span>Còn lại: <strong class="privacy-blur">${fmtVnd(b.remaining)}</strong></span>
-            <span>Còn ${b.daysLeft} ngày</span>
-          </div>
-        </div>
-      `;
-
-      // Unclassified Inbox
-      if (finances.unclassifiedExpenses && finances.unclassifiedExpenses.length > 0) {
-        html += `
-          <div class="card inbox-card">
-            <div class="card-title" style="color:var(--amber);">
-              <span class="icon-tag">📬 Hộp Thư Chưa Phân Loại (${finances.unclassifiedExpenses.length})</span>
-            </div>
-            ${finances.unclassifiedExpenses.map(p => renderPendingItem(p)).join('')}
-          </div>
-        `;
-      }
-
-      // Heatmap Grid (GitHub style)
-      html += renderHeatmap(finances.dailySpendMap);
-
-      // Category breakdown
-      html += renderCategoryDonut(finances.categoryBreakdown, b.spent);
-
-      // Bank Balance Trajectory
-      if (finances.bankBalances && finances.bankBalances.length > 0) {
-        html += renderBalanceTrajectory(finances.bankBalances);
-      }
-
-      // Subscriptions
-      html += renderSubscriptions(subscriptions);
-
-      // Recent 8 expenses
-      html += renderRecentExpenses(finances.recentExpenses);
-
-      document.getElementById('content').innerHTML = html;
-    }
-
-    function renderPendingItem(p) {
-      return `
-        <div class="inbox-item" id="pending-item-${p.id}">
-          <div class="inbox-item-top">
-            <div class="inbox-item-desc">${p.description}</div>
-            <div class="inbox-item-amt privacy-blur">${fmtVnd(p.amount)}</div>
-          </div>
-          <div style="font-size:10px;color:var(--text-sub);">${p.date}</div>
-          <div class="inbox-chips">
-            <button class="chip-btn" onclick="classifyPending(${p.id}, 'food', 'Ăn uống')">🍽 Ăn uống</button>
-            <button class="chip-btn" onclick="classifyPending(${p.id}, 'transport', 'Đi lại')">🚗 Đi lại</button>
-            <button class="chip-btn" onclick="classifyPending(${p.id}, 'shopping', 'Mua sắm')">🛍 Mua sắm</button>
-            <button class="chip-btn" onclick="classifyPending(${p.id}, 'bills', 'Sinh hoạt')">💡 Sinh hoạt</button>
-            <button class="chip-btn" onclick="classifyPending(${p.id}, 'entertainment', 'Giải trí')">🎉 Giải trí</button>
-            <button class="chip-btn" onclick="classifyPending(${p.id}, 'other', 'Khác')">📝 Khác</button>
-          </div>
-        </div>
-      `;
-    }
-
-    async function classifyPending(pendingId, category, note) {
-      const el = document.getElementById(`pending-item-${pendingId}`);
-      if (el) el.style.opacity = '0.4';
-      await postAction({
-        type: 'classify_pending',
-        pendingId,
-        category,
-        note,
-      });
-    }
-
-    // Heatmap renderer
-    function renderHeatmap(dailyMap = {}) {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = today.getMonth() + 1;
-      const daysInMonth = new Date(year, month, 0).getDate();
-      const todayDate = today.getDate();
-
-      let cellsHtml = '';
-      for (let d = 1; d <= daysInMonth; d++) {
-        const dStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const amt = dailyMap[dStr] || 0;
-        let level = '';
-        if (amt > 150000) level = 'level-3';
-        else if (amt > 50000) level = 'level-2';
-        else if (amt > 0) level = 'level-1';
-
-        const isToday = d === todayDate ? 'today' : '';
-        cellsHtml += `
-          <div class="heat-cell ${level} ${isToday}" onclick="showDayDetails('${dStr}', ${amt})">
-            <span>${d}</span>
-          </div>
-        `;
-      }
-
-      return `
-        <div class="card">
-          <div class="card-title">
-            <span class="icon-tag">🗓 Lịch Nhiệt Chi Tiêu Tháng</span>
-            <span class="badge">GitHub Style</span>
-          </div>
-          <div class="heatmap-grid">
-            ${cellsHtml}
-          </div>
-          <div style="display:flex;justify-content:flex-end;gap:6px;align-items:center;margin-top:10px;font-size:10px;color:var(--text-sub);">
-            <span>Ít</span>
-            <span style="width:10px;height:10px;background:#141D30;border-radius:2px;"></span>
-            <span style="width:10px;height:10px;background:rgba(245,158,11,0.25);border-radius:2px;"></span>
-            <span style="width:10px;height:10px;background:rgba(245,158,11,0.55);border-radius:2px;"></span>
-            <span style="width:10px;height:10px;background:rgba(244,63,94,0.85);border-radius:2px;"></span>
-            <span>Nhiều</span>
-          </div>
-        </div>
-      `;
-    }
-
-    function showDayDetails(dateStr, amt) {
-      if (amt === 0) alert(`Ngày ${dateStr}: Chưa chi gì 🎉`);
-      else alert(`Ngày ${dateStr}: Đã chi ${fmtVnd(amt)}`);
-    }
-
-    // Category Donut renderer
-    function renderCategoryDonut(categories = {}, totalSpent = 0) {
-      const items = Object.entries(categories).sort((a, b) => b[1].amount - a[1].amount);
-      if (items.length === 0) return '';
-
-      let listHtml = '';
-      items.slice(0, 5).forEach(([catKey, c]) => {
-        listHtml += `
-          <div class="cat-item">
-            <span style="display:flex;align-items:center;gap:6px;">
-              <span>${c.icon}</span>
-              <span>${c.label}</span>
-            </span>
-            <span style="font-weight:700;" class="privacy-blur">${fmtVnd(c.amount)} (${c.percent}%)</span>
-          </div>
-        `;
-      });
-
-      return `
-        <div class="card">
-          <div class="card-title">
-            <span class="icon-tag">📂 Danh Mục Chi Tiêu</span>
-            <span class="badge">Tháng này</span>
-          </div>
-          <div class="donut-wrap">
-            <div class="cat-list">
-              ${listHtml}
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    // Balance trajectory
-    function renderBalanceTrajectory(balances = []) {
-      if (balances.length < 2) return '';
-      const vals = balances.map(b => b.balance);
-      const min = Math.min(...vals);
-      const max = Math.max(...vals);
-      const latest = vals[vals.length - 1];
-
-      return `
-        <div class="card">
-          <div class="card-title">
-            <span class="icon-tag">📈 Đường Biến Động Số Dư VCB</span>
-            <span class="badge privacy-blur">${fmtVnd(latest)}</span>
-          </div>
-          <div style="font-size:11px;color:var(--text-sub);margin-bottom:8px;">
-            Thấp nhất: <strong class="privacy-blur">${fmtVnd(min)}</strong> · Cao nhất: <strong class="privacy-blur">${fmtVnd(max)}</strong>
-          </div>
-          <div style="height:60px;display:flex;align-items:flex-end;gap:4px;padding-top:10px;">
-            ${balances.map(b => {
-              const h = max === min ? 50 : Math.round(((b.balance - min) / (max - min)) * 80 + 20);
-              return `<div style="flex:1;height:${h}%;background:linear-gradient(180deg,#38BDF8,#10B981);border-radius:3px;" title="${b.date}: ${fmtVnd(b.balance)}"></div>`;
-            }).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    // Subscriptions
-    function renderSubscriptions(subs) {
-      let itemsHtml = '';
-      if (!subs.items || subs.items.length === 0) {
-        itemsHtml = '<div style="color:var(--text-sub);font-size:12px;padding:6px 0;">Chưa có thuê bao định kỳ.</div>';
+      var budget;
+      if (b.hasBudget) {
+        var pct = clamp(b.percent || 0, 0, 100);
+        var color = b.isOver ? 'var(--bad)' : (b.percent > b.timeElapsedPercent + 5 ? 'var(--warn)' : 'var(--good)');
+        budget = '<section class="card rise" style="--i:' + (i++) + '"><div class="card-head"><div class="card-title">Ngân sách tháng</div><button class="link" data-sheet="budget">Chỉnh</button></div>'
+          + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span class="money" style="font-size:20px;font-weight:700">' + vnd(b.spent) + '</span><span class="faint money">/ ' + vnd(b.amount) + ' đ</span></div>'
+          + '<div class="bar"><div class="fill" style="background:' + color + '" data-w="' + pct + '"></div><div class="mark" style="left:' + clamp(b.timeElapsedPercent || 0, 0, 100) + '%"></div></div>'
+          + '<div class="kv"><span>Vạch trắng: nhịp ngày ' + (b.timeElapsedPercent || 0) + '% tháng</span><span>' + (b.percent || 0) + '%</span></div>'
+          + '<div class="grid-2" style="margin-top:14px"><div class="stat"><div class="lbl">Còn lại</div><div class="val money" style="font-size:18px">' + vndShort(b.remaining) + '</div></div>'
+          + '<div class="stat"><div class="lbl">Mỗi ngày (' + (b.daysLeft || 0) + ' ngày)</div><div class="val money" style="font-size:18px">' + vndShort(b.safeDaily) + '</div></div></div>'
+          + categoryBudgets(f.categoryBudgets) + '</section>';
       } else {
-        subs.items.forEach(s => {
-          itemsHtml += `
-            <div class="list-item">
-              <div class="item-left">
-                <div class="item-icon">📦</div>
-                <div>
-                  <div class="item-name">${s.name}</div>
-                  <div class="item-sub">Ngày ${s.paymentDay} hàng tháng · <span style="color:${s.daysLeft <= 3 ? 'var(--rose)' : 'var(--cyan)'}">${s.dueText}</span></div>
-                </div>
-              </div>
-              <div class="item-amt privacy-blur">${fmtVnd(s.amount)}</div>
-            </div>
-          `;
-        });
+        budget = '<section class="card rise" style="--i:' + (i++) + '"><div class="empty"><span class="e">🎯</span>Đặt ngân sách tháng để biết mỗi ngày còn được tiêu bao nhiêu.</div>'
+          + '<button class="btn ghost" data-sheet="budget">Đặt ngân sách</button></section>';
       }
 
-      return `
-        <div class="card">
-          <div class="card-title">
-            <span class="icon-tag">🔁 Thuê Bao Định Kỳ</span>
-            <span class="badge privacy-blur">${fmtVnd(subs.totalMonthly)}/tháng</span>
-          </div>
-          ${itemsHtml}
-        </div>
-      `;
+      var series = plural(f.spendSeries);
+      var max = Math.max.apply(null, series.map(function (s) { return s.amount; }).concat([b.safeDaily || 0, 1]));
+      var todayStr = d.todayStr;
+      var chart = '<section class="card rise" style="--i:' + (i++) + '"><div class="card-head"><div class="card-title">14 ngày gần đây</div><span class="faint" style="font-size:12px">chạm cột để xem</span></div>'
+        + '<div class="bars14">' + (b.hasBudget && b.safeDaily ? '<div class="limit" style="bottom:calc(20px + ' + (b.safeDaily / max).toFixed(4) + ' * (100% - 26px))"></div>' : '')
+        + series.map(function (s, k) {
+          var cls = (s.date === todayStr ? ' today' : '') + (b.hasBudget && s.amount > b.safeDaily ? ' over' : '') + (state.selDay === s.date ? ' sel' : '');
+          return '<button class="col' + cls + '" data-day="' + esc(s.date) + '" data-amt="' + s.amount + '"><div class="b" style="transition-delay:' + (k * 30) + 'ms" data-sy="' + (s.amount / max) + '"></div><span class="lbl">' + Number(s.date.slice(8)) + '</span></button>';
+        }).join('') + '</div><div class="tip" id="dayTip">' + dayTip(series) + '</div></section>';
+
+      var cats = Object.keys(f.categoryBreakdown || {}).map(function (k) { var c = f.categoryBreakdown[k]; return { key: k, label: c.label, icon: c.icon, amount: c.amount, percent: c.percent }; })
+        .sort(function (a, b2) { return b2.amount - a.amount; });
+      var donut = '<section class="card rise" style="--i:' + (i++) + '"><div class="card-head"><div class="card-title">Theo danh mục · tháng</div></div>'
+        + (cats.length ? '<div class="donut-wrap">' + donutSvg(cats, f.thisMonth) + '<div class="cat-list">' + cats.slice(0, 6).map(function (c) {
+          return '<div class="cat-line"><i style="background:' + (CAT_COLORS[c.key] || '#8792A8') + '"></i><span>' + c.icon + ' ' + esc(shortCat(c.label)) + '</span><b class="money">' + vndShort(c.amount) + '</b></div>';
+        }).join('') + '</div></div>' : '<div class="empty">Chưa có khoản chi nào trong tháng.</div>') + '</section>';
+
+      var tx = '<section class="card rise" style="--i:' + (i++) + '"><div class="card-head"><div class="card-title">Giao dịch gần đây</div><button class="link" data-quick="expense">+ Thêm</button></div>'
+        + txList(plural(f.recentExpenses)) + '</section>';
+
+      var inbox = plural(f.unclassifiedExpenses).length ? inboxCard(f.unclassifiedExpenses, i++) : '';
+      var subs = subsCard(d.subscriptions || {}, i++);
+      var bal = balanceCard(plural(f.bankBalances), i++);
+      return seg + summary + inbox + budget + chart + donut + tx + subs + bal;
     }
-
-    // Recent Expenses
-    function renderRecentExpenses(expenses = []) {
-      if (!expenses || expenses.length === 0) return '';
-      let listHtml = '';
-      expenses.forEach(e => {
-        const safeDesc = (e.description || '').replace(/'/g, "\\'");
-        listHtml += `
-          <div class="list-item" id="expense-row-${e.id}">
-            <div class="item-left">
-              <div class="item-icon">${e.icon}</div>
-              <div>
-                <div class="item-name">${e.description}</div>
-                <div class="item-sub">${e.category} · ${e.date}</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div class="item-amt privacy-blur">${fmtVnd(e.amount)}</div>
-              <button class="btn-del-exp" onclick="deleteExpenseItem(${e.id}, '${safeDesc}', ${e.amount})" title="Xóa khoản chi">✕</button>
-            </div>
-          </div>
-        `;
-      });
-
-      return `
-        <div class="card">
-          <div class="card-title">
-            <span class="icon-tag">📝 Gần Đây</span>
-            <span class="badge">${expenses.length} khoản</span>
-          </div>
-          ${listHtml}
-        </div>
-      `;
+    function categoryBudgets(list) {
+      list = plural(list);
+      if (!list.length) return '';
+      return '<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)"><div class="eyebrow" style="margin-bottom:10px">Ngân sách danh mục</div>'
+        + list.map(function (c) {
+          var color = c.percent > 100 ? 'var(--bad)' : c.percent > 80 ? 'var(--warn)' : (CAT_COLORS[c.category] || 'var(--good)');
+          return '<div style="margin-bottom:10px"><div class="kv" style="margin:0 0 6px"><span>' + c.icon + ' ' + esc(shortCat(c.label)) + '</span><span class="money">' + vndShort(c.spent) + ' / ' + vndShort(c.amount) + '</span></div>'
+            + '<div class="bar thin"><div class="fill" style="background:' + color + '" data-w="' + clamp(c.percent, 0, 100) + '"></div></div></div>';
+        }).join('') + '</div>';
     }
-
-    async function deleteExpenseItem(id, desc, amt) {
-      if (!confirm(`Xác nhận xóa "${desc}" (${fmtVnd(amt)}) khỏi sổ chi tiêu?`)) return;
-      const row = document.getElementById(`expense-row-${id}`);
-      if (row) row.style.opacity = '0.3';
-      await postAction({
-        type: 'delete_expense',
-        expenseId: id,
-      });
-    }
-
-    // 3. TAB SỨC KHỎE (HEALTH & SLEEP)
-    function renderHealth() {
-      const { health } = dashboardData;
-      const s = health.sleepStages;
-      const totalSleep = health.sleepTotalMins || 420;
-      const deepPct = Math.round((s.deep / totalSleep) * 100);
-      const remPct = Math.round((s.rem / totalSleep) * 100);
-      const corePct = Math.round((s.core / totalSleep) * 100);
-      const awakePct = Math.max(0, 100 - deepPct - remPct - corePct);
-
-      let html = `
-        <!-- Sleep Stages Card -->
-        <div class="card">
-          <div class="card-title">
-            <span class="icon-tag">😴 Giấc Ngủ Đêm Qua</span>
-            <span class="badge" style="background:rgba(139,92,246,0.15);color:var(--purple);">${health.sleepFormatted}</span>
-          </div>
-
-          <div class="sleep-bar-wrap">
-            <div class="sleep-seg deep" style="width:${deepPct}%;" title="Ngủ sâu ${s.deep}p (${deepPct}%)"></div>
-            <div class="sleep-seg rem" style="width:${remPct}%;" title="Ngủ REM ${s.rem}p (${remPct}%)"></div>
-            <div class="sleep-seg core" style="width:${corePct}%;" title="Ngủ nông ${s.core}p (${corePct}%)"></div>
-            <div class="sleep-seg awake" style="width:${awakePct}%;" title="Thức ${s.awake}p (${awakePct}%)"></div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:10px;text-align:center;">
-            <div>
-              <div style="font-size:10px;color:var(--indigo);font-weight:700;">NGỦ SÂU</div>
-              <div style="font-size:12px;font-weight:800;">${s.deep}m</div>
-            </div>
-            <div>
-              <div style="font-size:10px;color:var(--cyan);font-weight:700;">NGỦ REM</div>
-              <div style="font-size:12px;font-weight:800;">${s.rem}m</div>
-            </div>
-            <div>
-              <div style="font-size:10px;color:var(--purple);font-weight:700;">NGỦ NÔNG</div>
-              <div style="font-size:12px;font-weight:800;">${s.core}m</div>
-            </div>
-            <div>
-              <div style="font-size:10px;color:var(--amber);font-weight:700;">THỨC</div>
-              <div style="font-size:12px;font-weight:800;">${s.awake}m</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- HRV Personal Baseline Card -->
-        <div class="card">
-          <div class="card-title">
-            <span class="icon-tag">💓 HRV (Biến Thiên Nhịp Tim)</span>
-            <span class="badge">${health.hrv.current ? health.hrv.current + ' ms' : '--'}</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-sub);">
-            Dải nền cá nhân 28 ngày: <strong>${health.hrv.baselineMin} - ${health.hrv.baselineMax} ms</strong>
-          </div>
-          <div class="baseline-track">
-            <div class="baseline-band" style="left:30%;width:40%;"></div>
-            <div class="baseline-pointer" style="left:${health.hrv.current ? Math.min(95, Math.max(5, health.hrv.current)) : 50}%;"></div>
-          </div>
-          <div style="font-size:11px;color:var(--emerald);font-weight:600;margin-top:6px;">
-            ✨ Chỉ số đang nằm trong dải sinh lý bình thường của bạn
-          </div>
-        </div>
-
-        <!-- Resting Heart Rate -->
-        <div class="card">
-          <div class="card-title">
-            <span class="icon-tag">🫀 Nhịp Tim Nghỉ (RHR)</span>
-            <span class="badge">${health.rhr.current ? health.rhr.current + ' bpm' : '--'}</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-sub);">
-            Dải nền cá nhân 28 ngày: <strong>${health.rhr.baselineMin} - ${health.rhr.baselineMax} bpm</strong>
-          </div>
-          <div class="baseline-track">
-            <div class="baseline-band" style="left:35%;width:35%;"></div>
-            <div class="baseline-pointer" style="left:${health.rhr.current ? Math.min(95, Math.max(5, health.rhr.current - 20)) : 50}%;"></div>
-          </div>
-        </div>
-
-        <!-- Body Battery Breakdown -->
-        <div class="card">
-          <div class="card-title">
-            <span class="icon-tag">🔋 Pin Thể Chất (Body Battery)</span>
-            <span class="badge" style="background:rgba(16,185,129,0.15);color:var(--emerald);">${health.bodyBattery}%</span>
-          </div>
-          <div style="font-size:12px;line-height:1.5;color:var(--text-sub);">
-            Pin thể chất được tổng hợp từ 3 trụ cột phục hồi chính: Giấc ngủ sâu/REM đêm qua, độ ổn định biến thiên nhịp tim HRV và tải vận động.
-          </div>
-        </div>
-
-        <!-- Steps -->
-        <div class="card">
-          <div class="card-title">
-            <span class="icon-tag">🚶 Bước Chân Hôm Nay</span>
-            <span class="badge">${health.steps.current.toLocaleString('vi-VN')} / 10.000</span>
-          </div>
-          <div class="pacing-track" style="margin-top:8px;">
-            <div class="pacing-fill" style="width:${health.steps.percent}%;background:linear-gradient(90deg, #06B6D4, #10B981);"></div>
-          </div>
-        </div>
-      `;
-
-      // Body stats (weight & BMI)
-      if (health.weightKg) {
-        html += `
-          <div class="card">
-            <div class="card-title">
-              <span class="icon-tag">⚖️ Cân Nặng & Thể Trạng</span>
-              <span class="badge">${health.weightKg} kg</span>
-            </div>
-            <div class="meta-row">
-              <span>BMI: <strong>${health.bmi || '--'}</strong> (${health.bmiCategory || '--'})</span>
-              <span>Chiều cao: <strong>${health.heightCm || '--'} cm</strong></span>
-            </div>
-          </div>
-        `;
+    function dayTip(series) {
+      var sel = series.filter(function (s) { return s.date === state.selDay; })[0];
+      if (!sel) {
+        var sum = series.reduce(function (a, s) { return a + s.amount; }, 0);
+        return 'Trung bình <b class="money">' + vndShort(sum / Math.max(1, series.length)) + '</b>/ngày trong 14 ngày';
       }
-
-      document.getElementById('content').innerHTML = html;
+      var p = sel.date.split('-');
+      return 'Ngày ' + Number(p[2]) + '/' + Number(p[1]) + ': <b class="money">' + vnd(sel.amount) + ' đ</b>';
+    }
+    function donutSvg(cats, total) {
+      var acc = 0, r = 42, segs = '';
+      total = total || 1;
+      cats.forEach(function (c) {
+        var len = Math.max(0, c.amount / total * 100);
+        var gap = cats.length > 1 ? 1.2 : 0;
+        segs += '<circle cx="56" cy="56" r="' + r + '" stroke="' + (CAT_COLORS[c.key] || '#8792A8') + '" pathLength="100" stroke-dasharray="0 100" data-arc="' + Math.max(0, len - gap) + ' ' + (100 - Math.max(0, len - gap)) + '" stroke-dashoffset="' + (-acc) + '"/>';
+        acc += len;
+      });
+      return '<div class="donut"><svg viewBox="0 0 112 112"><circle cx="56" cy="56" r="' + r + '" stroke="rgba(255,255,255,0.05)"/>' + segs + '</svg>'
+        + '<div class="c"><div><b>' + cats.length + '</b>danh mục</div></div></div>';
+    }
+    function txList(items) {
+      if (!items.length) return '<div class="empty"><span class="e">🧾</span>Chưa có giao dịch nào.</div>';
+      var out = '', lastDay = '';
+      var today = state.data.todayStr;
+      items.slice(0, 15).forEach(function (e) {
+        if (e.localDate !== lastDay) {
+          lastDay = e.localDate;
+          var label = e.localDate === today ? 'Hôm nay' : e.date;
+          var dayTotal = items.filter(function (x) { return x.localDate === e.localDate; }).reduce(function (a, x) { return a + x.amount; }, 0);
+          out += '<div class="day-label"><span>' + esc(label) + '</span><span class="money">' + vndShort(dayTotal) + '</span></div>';
+        }
+        out += '<button class="row" data-tx="' + esc(e.id) + '"><span class="ico">' + e.icon + '</span><span class="main"><span class="t" style="display:block">' + esc(e.description) + '</span>'
+          + '<span class="s" style="display:block">' + esc(shortCat(e.category)) + (e.time ? ' · ' + esc(e.time) : '') + '</span></span><span class="amt money">−' + vnd(e.amount) + '</span></button>';
+      });
+      return '<div class="list">' + out + '</div>';
+    }
+    function subsCard(s, i) {
+      var items = plural(s.items);
+      if (!items.length) return '';
+      return '<section class="card rise" style="--i:' + i + '"><div class="card-head"><div class="card-title">Thuê bao định kỳ</div><span class="money faint" style="font-size:13px">' + vndShort(s.totalMonthly) + '/tháng</span></div><div class="list">'
+        + items.slice(0, 6).map(function (x) {
+          var soon = x.daysLeft <= 3;
+          return '<div class="row"><span class="ico">🔁</span><span class="main"><span class="t" style="display:block">' + esc(x.name) + '</span><span class="s" style="display:block">Ngày ' + esc(x.paymentDay) + ' hằng tháng</span></span>'
+            + '<span style="text-align:right"><span class="amt money" style="display:block">' + vnd(x.amount) + ' đ</span><span class="pill ' + (soon ? 'warn' : 'neutral') + '" style="margin-top:4px;padding:2px 8px;font-size:11px">' + esc(x.dueText || (x.daysLeft + ' ngày')) + '</span></span></div>';
+        }).join('') + '</div></section>';
+    }
+    function balanceCard(list, i) {
+      if (list.length < 2) return '';
+      var vals = list.map(function (b) { return b.balance; });
+      return '<section class="card rise" style="--i:' + i + '"><div class="card-head"><div class="card-title">Số dư Vietcombank</div><b class="money">' + vnd(vals[vals.length - 1]) + ' đ</b></div>'
+        + sparkSvg(vals, 'var(--room)') + '<div class="kv"><span>' + esc(dm(list[0].date)) + '</span><span>' + esc(dm(list[list.length - 1].date)) + '</span></div></section>';
+    }
+    function sparkSvg(vals, color) {
+      if (vals.length < 2) return '';
+      var w = 300, h = 70, min = Math.min.apply(null, vals), max = Math.max.apply(null, vals), span = max - min || 1;
+      var pts = vals.map(function (v, k) { return [k / (vals.length - 1) * w, h - 6 - (v - min) / span * (h - 12)]; });
+      var dPath = pts.map(function (p, k) { return (k ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+      var id = 'g' + Math.random().toString(36).slice(2, 7);
+      return '<svg class="spark" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none"><defs><linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + color + '" stop-opacity=".28"/><stop offset="1" stop-color="' + color + '" stop-opacity="0"/></linearGradient></defs>'
+        + '<path class="area" d="' + dPath + ' L' + w + ' ' + h + ' L0 ' + h + ' Z" fill="url(#' + id + ')"/><path class="line" d="' + dPath + '" stroke="' + color + '" pathLength="1"/></svg>';
+    }
+    function segmented(opts, current, key) {
+      var idx = Math.max(0, opts.map(function (o) { return o[0]; }).indexOf(current));
+      return '<div class="seg" data-seg="' + key + '"><div class="thumb" style="width:calc((100% - 8px)/' + opts.length + ');transform:translateX(' + (idx * 100) + '%)"></div>'
+        + opts.map(function (o) { return '<button data-val="' + o[0] + '" class="' + (o[0] === current ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>';
     }
 
-    // 4. TAB PHÒNG (ROOM TELEMETRY)
-    function renderRoom() {
-      const { room } = dashboardData;
-      let html = `
-        <div class="card">
-          <div class="card-title">
-            <span class="icon-tag">🏠 Phòng & Sức Khỏe</span>
-            <span class="badge" style="background:rgba(16,185,129,0.15);color:var(--emerald);">${room.comfort}</span>
-          </div>
-          <div class="grid-2" style="margin-top:10px;">
-            <div class="quick-box">
-              <div class="quick-icon">🌡️</div>
-              <div>
-                <div class="quick-title">Nhiệt độ</div>
-                <div class="quick-val">${room.temperature}°C</div>
-              </div>
-            </div>
-            <div class="quick-box">
-              <div class="quick-icon">💧</div>
-              <div>
-                <div class="quick-title">Độ ẩm</div>
-                <div class="quick-val">${room.humidity}%</div>
-              </div>
-            </div>
-          </div>
-          <div class="meta-row" style="margin-top:10px;">
-            <span>Cảm biến: <strong>${room.sensorOnline ? '🟢 Hoạt động tốt' : '🔴 Ngoại tuyến'}</strong></span>
-            <span>Không gian: <strong>Vừa vặn, mát mẻ</strong></span>
-          </div>
-        </div>
-      `;
+    function viewHealth(d) {
+      var h = d.health || {}, i = 0;
+      var bb = h.bodyBattery;
+      var gauge = '<section class="card rise" style="--i:' + (i++) + '"><div class="card-head"><div class="card-title">Pin cơ thể</div>' + (bb != null ? '<span class="pill ' + (bb >= 60 ? 'good' : bb >= 35 ? 'warn' : 'bad') + '">' + batteryLabel(bb) + '</span>' : '') + '</div>'
+        + (bb != null ? '<div class="gauge"><svg viewBox="0 0 150 88"><path d="M12 80 A63 63 0 0 1 138 80" stroke="rgba(255,255,255,0.07)"/><path class="val" d="M12 80 A63 63 0 0 1 138 80" pathLength="100" stroke="url(#gg)" data-dash="' + bb + '"/>'
+          + '<defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#FF6B6B"/><stop offset=".5" stop-color="#F5B547"/><stop offset="1" stop-color="#3DDC97"/></linearGradient></defs></svg>'
+          + '<div class="c"><b>' + num(bb, 'int') + '</b><span class="faint">%</span></div></div>'
+          : '<div class="empty"><span class="e">🔋</span>Chưa có dữ liệu HRV/nhịp tim để tính pin cơ thể. Mở LongOS Sync trên iPhone để đồng bộ Apple Health.</div>')
+        + '</section>';
 
-      // 24h trend bars
-      if (room.recent24h && room.recent24h.length > 0) {
-        html += `
-          <div class="card">
-            <div class="card-title">
-              <span class="icon-tag">📈 Biểu Đồ Nhiệt Độ 24 Giờ</span>
-              <span class="badge">ESP32</span>
-            </div>
-            <div style="height:70px;display:flex;align-items:flex-end;gap:3px;padding-top:12px;">
-              ${room.recent24h.map(r => {
-                const h = Math.min(100, Math.max(20, Math.round((r.temp - 18) * 6)));
-                return `<div style="flex:1;height:${h}%;background:linear-gradient(180deg,#F59E0B,#38BDF8);border-radius:2px;" title="${r.time}: ${r.temp}°C"></div>`;
-              }).join('')}
-            </div>
-            <div class="meta-row" style="margin-top:8px;">
-              <span>Gần đây nhất: <strong>${room.recent24h[room.recent24h.length - 1].temp}°C</strong></span>
-              <span>24 mốc đo gần nhất</span>
-            </div>
-          </div>
-        `;
+      var st = h.sleepStages || {};
+      var hasStages = h.sleepTotalMins && st.deep != null && st.rem != null;
+      var sleep = '<section class="card rise" style="--i:' + (i++) + '"><div class="card-head"><div class="card-title">Giấc ngủ đêm qua</div><span style="color:var(--sleep);font-weight:700">' + (h.sleepFormatted ? esc(h.sleepFormatted) : '—') + '</span></div>'
+        + (h.sleepTotalMins ? (hasStages ? '<div class="stages">' + stageSeg(st.deep, h.sleepTotalMins, '#6D4BFF', 0) + stageSeg(st.core, h.sleepTotalMins, '#A48BFA', 1) + stageSeg(st.rem, h.sleepTotalMins, '#4CC3FF', 2) + stageSeg(st.awake, h.sleepTotalMins, '#FF9F5A', 3) + '</div>'
+          + '<div class="legend" style="margin-top:12px"><div><i style="background:#6D4BFF"></i>Sâu <b>' + mins(st.deep) + '</b></div><div><i style="background:#A48BFA"></i>Lõi <b>' + mins(st.core) + '</b></div><div><i style="background:#4CC3FF"></i>REM <b>' + mins(st.rem) + '</b></div>' + (st.awake != null ? '<div><i style="background:#FF9F5A"></i>Thức <b>' + mins(st.awake) + '</b></div>' : '') + '</div>'
+          : '<div class="faint" style="font-size:13px">Chưa có chi tiết các giai đoạn ngủ.</div>')
+          + '<div class="bar thin" style="margin-top:14px"><div class="fill" style="background:var(--sleep)" data-w="' + clamp(h.sleepTotalMins / 480 * 100, 0, 100) + '"></div></div><div class="kv"><span>Mục tiêu 8 giờ</span><span>' + Math.round(h.sleepTotalMins / 4.8) + '%</span></div>'
+          : '<div class="empty">Chưa có dữ liệu giấc ngủ.</div>') + '</section>';
+
+      var steps = h.steps || { current: 0, goal: 10000, percent: 0 };
+      var move = '<section class="card rise" style="--i:' + (i++) + '"><div class="card-head"><div class="card-title">Vận động hôm nay</div><span style="color:var(--move);font-weight:700">' + steps.percent + '%</span></div>'
+        + '<div class="big-num" style="font-size:28px">' + num(steps.current, 'int') + '<span class="unit">/ ' + vnd(steps.goal) + ' bước</span></div>'
+        + '<div class="bar" style="margin-top:10px"><div class="fill" style="background:linear-gradient(90deg,#1FAF74,var(--move))" data-w="' + steps.percent + '"></div></div></section>';
+
+      var vit = '<div class="grid-2 rise" style="--i:' + (i++) + ';margin-bottom:12px">' + vitalTile('HRV', h.hrv, 'ms', true) + vitalTile('Nhịp tim nghỉ', h.rhr, 'bpm', false) + '</div>';
+
+      var body = h.weightKg ? '<section class="card tight rise" style="--i:' + (i++) + '"><div class="grid-2"><div class="stat"><div class="lbl">Cân nặng</div><div class="val">' + esc(h.weightKg) + '<small>kg</small></div><div class="foot">' + (h.lastCheckinDate ? 'Ghi ngày ' + esc(h.lastCheckinDate) : '') + '</div></div>'
+        + '<div class="stat"><div class="lbl">BMI</div><div class="val">' + (h.bmi ? esc(h.bmi) : '—') + '</div><div class="foot">' + esc(h.bmiCategory || '') + '</div></div></div></section>' : '';
+
+      var moodC = '<section class="card rise" style="--i:' + (i++) + '"><div class="card-head"><div class="card-title">Cảm xúc hôm nay</div><button class="link" data-quick="mood">' + (d.mood ? 'Cập nhật' : 'Ghi lại') + '</button></div>'
+        + (d.mood ? '<div style="display:flex;align-items:center;gap:14px"><span style="font-size:38px">' + d.mood.emoji + '</span><div><div style="font-weight:600">' + esc(d.mood.label) + '</div><div class="faint" style="font-size:12.5px;margin-top:3px">Năng lượng ' + esc(d.mood.score) + '/10</div></div></div>'
+          : '<div class="faint" style="font-size:13px">Bạn đang thấy thế nào? Chạm "Ghi lại" để lưu nhanh.</div>') + '</section>';
+      return gauge + sleep + move + vit + body + moodC;
+    }
+    function stageSeg(v, total, color, k) { return v ? '<i style="width:' + (v / total * 100) + '%;background:' + color + ';transition-delay:' + (k * 0.12) + 's" data-sx="1"></i>' : ''; }
+    function mins(v) { if (v == null) return '—'; var h = Math.floor(v / 60), m = Math.round(v % 60); return h ? h + 'h' + (m ? pad(m) : '') : m + 'p'; }
+    function vitalTile(label, data, unit, higherBetter) {
+      if (!data || data.current == null) return '<div class="card tight stat"><div class="lbl">' + label + '</div><div class="val">—</div><div class="foot">Chưa có dữ liệu</div></div>';
+      var diff = data.mean ? data.current - data.mean : 0;
+      var good = higherBetter ? diff >= 0 : diff <= 0;
+      return '<div class="card tight stat"><div class="lbl">' + label + '</div><div class="val">' + num(data.current, 'int') + '<small>' + unit + '</small></div>'
+        + '<div class="foot" style="color:' + (Math.abs(diff) < 1 ? 'var(--text-3)' : good ? 'var(--good)' : 'var(--warn)') + '">' + (data.mean ? (diff > 0 ? '▲ ' : diff < 0 ? '▼ ' : '') + Math.abs(Math.round(diff)) + ' so với TB ' + data.mean : '') + '</div></div>';
+    }
+
+    function viewRoom(d) {
+      var r = d.room || {}, i = 0;
+      var online = r.sensorOnline && !r.stale;
+      var updated = r.updatedAt ? new Date(r.updatedAt) : null;
+      var ago = updated ? Math.round((Date.now() - updated.getTime()) / 60000) : null;
+      var big = '<section class="card hero rise" style="--i:' + (i++) + ';background:radial-gradient(110% 90% at 100% 0%,rgba(76,195,255,.18),transparent 60%),var(--surface)">'
+        + '<div class="card-head"><span class="live ' + (online ? '' : 'off') + '"><i></i>' + (online ? 'Đang cập nhật' : 'Mất kết nối') + '</span><span class="faint" style="font-size:12px">'
+        + (ago == null ? 'Chưa có số đo' : ago < 1 ? 'vừa xong' : ago < 60 ? ago + ' phút trước' : updated.getHours() + ':' + pad(updated.getMinutes())) + '</span></div>'
+        + (r.temperature != null ? '<div class="room-big"><div class="t">' + Number(r.temperature).toFixed(1) + '<sup>°C</sup></div><div style="padding-bottom:8px"><div style="font-size:22px;font-weight:700">' + (r.humidity != null ? Math.round(r.humidity) + '%' : '—') + '</div><div class="faint" style="font-size:12px">độ ẩm</div></div></div>'
+          + '<div style="margin-top:12px"><span class="pill ' + comfortTone(r) + '">' + esc(r.comfort || '') + '</span></div>'
+          : '<div class="empty"><span class="e">📡</span>Chưa nhận được số đo từ cảm biến phòng.</div>') + '</section>';
+
+      var hist = plural(r.recent24h);
+      var chart = hist.length > 1 ? '<section class="card rise" style="--i:' + (i++) + '"><div class="card-head"><div class="card-title">Nhiệt độ gần đây</div><span class="faint" style="font-size:12px">' + hist.length + ' số đo</span></div>'
+        + sparkSvg(hist.map(function (x) { return x.temp; }), 'var(--room)')
+        + '<div class="kv"><span>' + esc(hist[0].time) + '</span><span>thấp ' + Math.min.apply(null, hist.map(function (x) { return x.temp; })).toFixed(1) + '° · cao ' + Math.max.apply(null, hist.map(function (x) { return x.temp; })).toFixed(1) + '°</span><span>' + esc(hist[hist.length - 1].time) + '</span></div>'
+        + (hist.some(function (x) { return x.humidity != null; }) ? '<div class="eyebrow" style="margin:16px 0 6px">Độ ẩm</div>' + sparkSvg(hist.filter(function (x) { return x.humidity != null; }).map(function (x) { return x.humidity; }), 'var(--sleep)') : '')
+        + '</section>' : '';
+
+      var tip = r.temperature != null ? '<section class="card rise" style="--i:' + (i++) + '"><div class="jarvis"><div class="orb"></div><p>' + esc(roomTip(r)) + '</p></div></section>' : '';
+      return big + chart + tip;
+    }
+    function comfortTone(r) { return r.temperature > 30 || r.temperature < 20 ? 'bad' : (r.temperature >= 28 || (r.humidity || 0) >= 75 ? 'warn' : 'good'); }
+    function roomTip(r) {
+      if (r.temperature > 30) return 'Phòng đang nóng. Bật điều hòa khoảng 26°C sẽ giúp ngủ sâu hơn.';
+      if ((r.humidity || 0) >= 75) return 'Độ ẩm cao, bật chế độ Dry hoặc mở cửa cho thoáng một lúc nhé.';
+      if (r.temperature >= 28) return 'Hơi ấm một chút, bật quạt nhẹ cho không khí lưu thông.';
+      if (r.temperature < 22) return 'Phòng khá lạnh, nhớ giữ ấm khi ngủ.';
+      return 'Nhiệt độ và độ ẩm đang ở mức dễ chịu.';
+    }
+
+    function viewTasks(d) {
+      var pend = plural(d.reminders && d.reminders.pending), i = 0;
+      var done = (d.reminders && d.reminders.completedTodayCount) || 0;
+      var total = done + pend.length;
+      var head = '<section class="card hero rise" style="--i:' + (i++) + ';background:radial-gradient(110% 90% at 100% 0%,rgba(255,122,138,.16),transparent 60%),var(--surface)">'
+        + '<div class="eyebrow">Tiến độ hôm nay</div><div class="big-num">' + num(done, 'int') + '<span class="unit">/ ' + total + ' việc</span></div>'
+        + '<div class="bar" style="margin-top:12px"><div class="fill" style="background:linear-gradient(90deg,#FF5C7A,var(--task))" data-w="' + (total ? done / total * 100 : 0) + '"></div></div></section>';
+      var add = '<button class="btn ghost rise" style="--i:' + (i++) + ';margin-bottom:12px" data-quick="reminder">+ Thêm lời nhắc</button>';
+      var list = '<section class="card rise" style="--i:' + (i++) + '"><div class="card-head"><div class="card-title">Đang chờ</div><span class="faint" style="font-size:12px">chạm ô vuông để xong</span></div>'
+        + (pend.length ? '<div class="list">' + pend.map(taskRow).join('') + '</div>' : '<div class="empty"><span class="e">🎉</span>Không còn việc nào. Nghỉ ngơi xíu nhé!</div>') + '</section>';
+      return head + add + list;
+    }
+    function taskRow(t) {
+      var due = t.dueAt ? new Date(t.dueAt) : null;
+      var now = new Date();
+      var when = '';
+      if (due) {
+        var sameDay = due.toDateString() === now.toDateString();
+        var tomorrow = new Date(now.getTime() + 86400000).toDateString() === due.toDateString();
+        when = (sameDay ? '' : tomorrow ? 'Mai ' : due.getDate() + '/' + (due.getMonth() + 1) + ' ') + pad(due.getHours()) + ':' + pad(due.getMinutes());
       }
-
-      document.getElementById('content').innerHTML = html;
+      var overdue = t.sent || (due && due < now);
+      return '<div class="task" data-task="' + esc(t.id) + '"><button class="check" data-done="' + esc(t.id) + '" aria-label="Hoàn thành"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></button>'
+        + '<div class="main"><div class="t">' + esc(t.task) + '</div><div class="s">' + (overdue ? '<span style="color:var(--task)">● Đã nhắc</span> · ' : '') + esc(when) + (t.repeat ? ' · 🔁 lặp lại' : '') + '</div></div>'
+        + '<button class="more" data-snooze="' + esc(t.id) + '" aria-label="Hoãn">⋯</button></div>';
     }
 
-    // 5. TAB VIỆC (TASKS & RPG RADAR)
-    function renderTasks() {
-      const { reminders, rpg } = dashboardData;
-
-      // Pending Tasks List
-      let taskListHtml = '';
-      if (!reminders.pending || reminders.pending.length === 0) {
-        taskListHtml = '<div style="color:var(--text-sub);font-size:13px;padding:8px 0;">Không có việc nào đang chờ 🎉 Tận hưởng ngày tuyệt vời nha!</div>';
-      } else {
-        reminders.pending.forEach(r => {
-          taskListHtml += `
-            <div class="list-item" id="task-row-${r.id}">
-              <div class="item-left">
-                <button class="chip-btn" style="border-radius:50%;width:28px;height:28px;padding:0;justify-content:center;color:var(--emerald);" onclick="completeTask(${r.id})">✓</button>
-                <div>
-                  <div class="item-name">${r.task}</div>
-                  <div class="item-sub">${r.repeat ? 'Lặp: ' + r.repeat : 'Lời nhắc'}</div>
-                </div>
-              </div>
-            </div>
-          `;
-        });
+    /* ---------- Interactions ---------- */
+    view.addEventListener('click', function (e) {
+      var t = e.target;
+      var el;
+      if ((el = t.closest('[data-goto]'))) return switchTab(el.dataset.goto);
+      if ((el = t.closest('[data-quick]'))) return openQuick(el.dataset.quick);
+      if ((el = t.closest('[data-sheet]'))) return openBudgetSheet();
+      if ((el = t.closest('[data-next]'))) {
+        var f = state.data.finances || {};
+        if (plural(f.unclassifiedExpenses).length) return switchTab('money');
+        if (plural(state.data.reminders && state.data.reminders.pending).length) return switchTab('tasks');
+        return openQuick('water');
       }
-
-      // RPG Radar SVG (Center 50,50, Radius 40)
-      const center = 50;
-      const radius = 38;
-      // 5 points at angles: -90, -18, 54, 126, 198 deg
-      const angles = [-90, -18, 54, 126, 198].map(a => (a * Math.PI) / 180);
-      const stats = [rpg.str, rpg.int, rpg.dis, rpg.eng, rpg.gold];
-      const points = stats.map((val, i) => {
-        const r = (val / 100) * radius;
-        const x = center + r * Math.cos(angles[i]);
-        const y = center + r * Math.sin(angles[i]);
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      }).join(' ');
-
-      // Web grid polygons (25%, 50%, 75%, 100%)
-      const webs = [0.25, 0.5, 0.75, 1.0].map(scale => {
-        return angles.map(a => {
-          const x = center + radius * scale * Math.cos(a);
-          const y = center + radius * scale * Math.sin(a);
-          return `${x.toFixed(1)},${y.toFixed(1)}`;
-        }).join(' ');
-      });
-
-      let html = `
-        <!-- Tasks Checklist Card -->
-        <div class="card">
-          <div class="card-title">
-            <span class="icon-tag">📋 Việc Cần Làm</span>
-            <span class="badge" style="background:rgba(139,92,246,0.15);color:var(--purple);">Đã xong hôm nay: ${reminders.completedTodayCount}</span>
-          </div>
-          ${taskListHtml}
-        </div>
-
-        <!-- RPG 5-Stat Radar Card -->
-        <div class="card">
-          <div class="card-title">
-            <span class="icon-tag">🛡️ Chỉ Số Thể Lực & Kỷ Luật (RPG)</span>
-            <span class="badge">Level System</span>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:center;padding:10px 0;">
-            <svg viewBox="0 0 100 100" style="width:180px;height:180px;overflow:visible;">
-              ${webs.map(w => `<polygon points="${w}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"></polygon>`).join('')}
-              ${angles.map(a => `<line x1="${center}" y1="${center}" x2="${(center + radius * Math.cos(a)).toFixed(1)}" y2="${(center + radius * Math.sin(a)).toFixed(1)}" stroke="rgba(255,255,255,0.1)" stroke-width="0.8"></line>`).join('')}
-              <polygon points="${points}" fill="rgba(56, 189, 248, 0.25)" stroke="#38BDF8" stroke-width="1.8"></polygon>
-
-              <!-- Labels -->
-              <text x="${center}" y="6" text-anchor="middle" fill="var(--text-sub)" font-size="6" font-weight="700">STR (Vận động) ${rpg.str}</text>
-              <text x="96" y="38" text-anchor="start" fill="var(--text-sub)" font-size="6" font-weight="700">INT (Trí tuệ) ${rpg.int}</text>
-              <text x="82" y="96" text-anchor="middle" fill="var(--text-sub)" font-size="6" font-weight="700">DIS (Kỷ luật) ${rpg.dis}</text>
-              <text x="18" y="96" text-anchor="middle" fill="var(--text-sub)" font-size="6" font-weight="700">ENG (Năng lượng) ${rpg.eng}</text>
-              <text x="4" y="38" text-anchor="end" fill="var(--text-sub)" font-size="6" font-weight="700">GOLD (Tài chính) ${rpg.gold}</text>
-            </svg>
-          </div>
-        </div>
-      `;
-
-      document.getElementById('content').innerHTML = html;
-    }
-
-    async function completeTask(reminderId) {
-      const row = document.getElementById(`task-row-${reminderId}`);
-      if (row) row.style.opacity = '0.3';
-      await postAction({
-        type: 'complete_reminder',
-        reminderId,
-      });
-    }
-
-    // Modal Sheet Handlers
-    const fabBtn = document.getElementById('fabBtn');
-    const quickModal = document.getElementById('quickModal');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-
-    fabBtn.addEventListener('click', () => {
-      quickModal.classList.add('open');
-    });
-    closeModalBtn.addEventListener('click', () => {
-      quickModal.classList.remove('open');
-    });
-    quickModal.addEventListener('click', (e) => {
-      if (e.target === quickModal) quickModal.classList.remove('open');
-    });
-
-    let selectedCat = 'food';
-    document.querySelectorAll('#quickCatChips .chip-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#quickCatChips .chip-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        selectedCat = btn.dataset.cat;
-      });
-    });
-
-    document.getElementById('saveExpenseBtn').addEventListener('click', async () => {
-      const amt = Number(document.getElementById('quickAmt').value);
-      const note = document.getElementById('quickNote').value;
-      if (!amt || amt <= 0) {
-        alert('Vui lòng nhập số tiền hợp lệ!');
+      if ((el = t.closest('.seg button'))) {
+        var segEl = el.closest('.seg');
+        if (segEl.dataset.seg === 'range' && el.dataset.val !== state.moneyRange) {
+          var idx = Array.prototype.indexOf.call(segEl.querySelectorAll('button'), el);
+          segEl.querySelector('.thumb').style.transform = 'translateX(' + (idx * 100) + '%)';
+          segEl.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === el); });
+          state.moneyRange = el.dataset.val; haptic('select');
+          setTimeout(function () { render('silent'); var n = view.querySelector('.hero [data-to]'); if (n) countUp(n); }, 260);
+        }
         return;
       }
-      const ok = await postAction({
-        type: 'quick_expense',
-        amount: amt,
-        category: selectedCat,
-        note,
-      });
-      if (ok) {
-        document.getElementById('quickAmt').value = '';
-        document.getElementById('quickNote').value = '';
-        quickModal.classList.remove('open');
-      }
-    });
-
-    document.getElementById('quickWaterBtn').addEventListener('click', async () => {
-      const ok = await postAction({ type: 'quick_water' });
-      if (ok) quickModal.classList.remove('open');
-    });
-
-    document.getElementById('quickFocusBtn').addEventListener('click', async () => {
-      alert('Đã kích hoạt phiên Focus 25 phút!');
-      quickModal.classList.remove('open');
-    });
-
-    document.getElementById('saveTaskBtn').addEventListener('click', async () => {
-      const task = document.getElementById('quickTaskInput').value;
-      if (!task || !task.trim()) {
-        alert('Vui lòng nhập nội dung việc cần làm!');
+      if ((el = t.closest('[data-day]'))) {
+        state.selDay = state.selDay === el.dataset.day ? null : el.dataset.day;
+        haptic('select');
+        view.querySelectorAll('.bars14 .col').forEach(function (c) { c.classList.toggle('sel', c.dataset.day === state.selDay); });
+        document.getElementById('dayTip').innerHTML = dayTip(plural(state.data.finances.spendSeries));
         return;
       }
-      const ok = await postAction({
-        type: 'quick_reminder',
-        task: task.trim(),
-      });
-      if (ok) {
-        document.getElementById('quickTaskInput').value = '';
-        quickModal.classList.remove('open');
+      if ((el = t.closest('[data-classify]'))) {
+        var item = el.closest('[data-pending]');
+        item.querySelectorAll('.chip').forEach(function (c) { c.classList.toggle('sel', c === el); });
+        haptic('medium');
+        act({ type: 'classify_pending', pendingId: Number(item.dataset.pending), category: el.dataset.classify }, 'Đã phân loại').then(function () {
+          item.classList.add('leaving');
+        }).catch(function () { el.classList.remove('sel'); });
+        return;
       }
+      if ((el = t.closest('[data-tx]'))) return openTxSheet(el.dataset.tx);
+      if ((el = t.closest('[data-done]'))) {
+        var row = el.closest('.task');
+        if (row.classList.contains('done')) return;
+        row.classList.add('done'); haptic('medium'); burst(el);
+        act({ type: 'complete_reminder', reminderId: Number(el.dataset.done) }, 'Xong một việc 🎉').then(function () {
+          setTimeout(function () { row.classList.add('gone'); }, 350);
+        }).catch(function () { row.classList.remove('done'); });
+        return;
+      }
+      if ((el = t.closest('[data-snooze]'))) return openSnoozeSheet(el.dataset.snooze);
     });
 
-    // Start load
+    function burst(anchor) {
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var r = anchor.getBoundingClientRect();
+      var colors = ['#3DDC97', '#F5B547', '#4CC3FF', '#A48BFA', '#FF7A8A'];
+      for (var k = 0; k < 10; k++) {
+        var p = document.createElement('i');
+        p.className = 'burst';
+        var ang = (Math.PI * 2 * k) / 10, dist = 26 + Math.random() * 16;
+        p.style.left = (r.left + r.width / 2 - 5) + 'px'; p.style.top = (r.top + r.height / 2 - 5) + 'px';
+        p.style.background = colors[k % colors.length];
+        p.style.setProperty('--dx', Math.cos(ang) * dist + 'px'); p.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
+        document.body.appendChild(p);
+        setTimeout(function (n) { n.remove(); }, 750, p);
+      }
+    }
+
+    /* ---------- Sheets ---------- */
+    var sheet = document.getElementById('sheet'), scrim = document.getElementById('scrim'), sheetBody = document.getElementById('sheetBody');
+    function openSheet(html, mount) {
+      sheetBody.innerHTML = html;
+      state.sheetOpen = true; syncBackButton();
+      scrim.classList.add('open'); sheet.classList.add('open'); sheet.scrollTop = 0;
+      haptic('light');
+      if (mount) mount(sheetBody);
+    }
+    function closeSheet() {
+      state.sheetOpen = false; syncBackButton();
+      scrim.classList.remove('open'); sheet.classList.remove('open');
+      if (document.activeElement) document.activeElement.blur();
+    }
+    scrim.addEventListener('click', closeSheet);
+    (function dragToClose() {
+      var y0 = null, dy = 0;
+      sheet.addEventListener('touchstart', function (e) { if (sheet.scrollTop <= 0) { y0 = e.touches[0].clientY; dy = 0; sheet.style.transition = 'none'; } }, { passive: true });
+      sheet.addEventListener('touchmove', function (e) { if (y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); sheet.style.transform = 'translateY(' + dy + 'px)'; }, { passive: true });
+      sheet.addEventListener('touchend', function () { if (y0 == null) return; sheet.style.transition = ''; sheet.style.transform = ''; if (dy > 110) closeSheet(); y0 = null; });
+    })();
+
+    function catGrid(selected, includeIncome) {
+      return '<div class="cat-grid">' + plural(state.data.categories).filter(function (c) { return includeIncome || c.key !== 'income'; }).map(function (c) {
+        return '<button class="cat-btn' + (c.key === selected ? ' sel' : '') + '" data-cat="' + esc(c.key) + '"><span>' + c.icon + '</span>' + esc(shortCat(c.label)) + '</button>';
+      }).join('') + '</div>';
+    }
+    function bindCatGrid(root, onPick) {
+      root.querySelectorAll('[data-cat]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          root.querySelectorAll('[data-cat]').forEach(function (x) { x.classList.toggle('sel', x === b); });
+          haptic('select'); onPick(b.dataset.cat);
+        });
+      });
+    }
+    function parseAmount(text) {
+      var s = String(text || '').toLowerCase().replace(/\s/g, '').replace(/đ|vnd/g, '');
+      var m = s.match(/^(\d+(?:[.,]\d+)?)(k|tr|m|trieu|triệu)?$/);
+      if (m) {
+        var v = parseFloat(m[1].replace(',', '.'));
+        if (m[2] === 'k') return Math.round(v * 1000);
+        if (m[2]) return Math.round(v * 1e6);
+        if (/[.,]\d{3}$/.test(m[1])) return Number(m[1].replace(/[.,]/g, ''));
+        return Math.round(v);
+      }
+      var digits = s.replace(/[^\d]/g, '');
+      return digits ? Number(digits) : 0;
+    }
+
+    function openQuick(kind) {
+      if (kind === 'expense' || kind === 'income') return openMoneySheet(kind);
+      if (kind === 'water') return openWaterSheet();
+      if (kind === 'mood') return openMoodSheet();
+      if (kind === 'reminder') return openReminderSheet();
+    }
+    function openMoneySheet(kind) {
+      var isIncome = kind === 'income';
+      var pick = isIncome ? 'income' : 'food';
+      openSheet('<h3>' + (isIncome ? 'Ghi khoản thu' : 'Ghi khoản chi') + '</h3>'
+        + '<div class="field"><input class="input amount-input money" id="amt" inputmode="decimal" placeholder="0" autocomplete="off"></div>'
+        + '<div class="chips" style="justify-content:center;margin:-4px 0 16px">' + (isIncome ? [500000, 1000000, 5000000] : [20000, 35000, 50000, 100000]).map(function (v) { return '<button class="chip" data-preset="' + v + '">' + vndShort(v) + '</button>'; }).join('') + '</div>'
+        + '<div class="field"><label>NỘI DUNG</label><input class="input" id="note" maxlength="200" placeholder="' + (isIncome ? 'Lương, thưởng...' : 'Cơm trưa, cà phê...') + '"></div>'
+        + (isIncome ? '' : '<div class="field"><label>DANH MỤC</label>' + catGrid(pick) + '</div>')
+        + '<button class="btn" id="saveBtn" disabled>Lưu</button>', function (root) {
+          var amt = root.querySelector('#amt'), save = root.querySelector('#saveBtn');
+          function sync() { var v = parseAmount(amt.value); save.disabled = !(v > 0); save.textContent = v > 0 ? 'Lưu ' + vnd(v) + ' đ' : 'Lưu'; }
+          amt.addEventListener('input', sync);
+          root.querySelectorAll('[data-preset]').forEach(function (b) { b.addEventListener('click', function () { amt.value = vnd(b.dataset.preset); haptic('select'); sync(); }); });
+          bindCatGrid(root, function (c) { pick = c; });
+          setTimeout(function () { amt.focus(); }, 380);
+          save.addEventListener('click', function () {
+            var v = parseAmount(amt.value);
+            if (!(v > 0)) return;
+            save.disabled = true;
+            act({ type: 'quick_expense', amount: v, category: pick, note: root.querySelector('#note').value, transaction_type: isIncome ? 'income' : 'expense' }, (isIncome ? 'Đã lưu khoản thu ' : 'Đã lưu khoản chi ') + vndShort(v))
+              .then(closeSheet).catch(function () { save.disabled = false; });
+          });
+        });
+    }
+    function openWaterSheet() {
+      openSheet('<h3>Uống nước 💧</h3><div class="grid-2" style="grid-template-columns:repeat(4,1fr)">' + [150, 250, 350, 500].map(function (ml) {
+        return '<button class="mood-btn" data-ml="' + ml + '"><span>' + (ml >= 500 ? '🍶' : ml >= 350 ? '🥤' : '🥛') + '</span>' + ml + 'ml</button>';
+      }).join('') + '</div>', function (root) {
+        root.querySelectorAll('[data-ml]').forEach(function (b) {
+          b.addEventListener('click', function () { act({ type: 'quick_water', amount: Number(b.dataset.ml) }).then(closeSheet).catch(function () {}); });
+        });
+      });
+    }
+    function openMoodSheet() {
+      openSheet('<h3>Bạn đang thấy thế nào?</h3><div class="mood-grid">' + plural(state.data.moodOptions).map(function (m) {
+        return '<button class="mood-btn" data-mood="' + esc(m.key) + '"><span>' + m.emoji + '</span>' + esc(String(m.label).split(' & ')[0]) + '</button>';
+      }).join('') + '</div>', function (root) {
+        root.querySelectorAll('[data-mood]').forEach(function (b) {
+          b.addEventListener('click', function () { act({ type: 'log_mood', category: b.dataset.mood }).then(closeSheet).catch(function () {}); });
+        });
+      });
+    }
+    function presetDue(key) {
+      var d = new Date();
+      if (key === '30') return new Date(d.getTime() + 30 * 60000);
+      if (key === '60') return new Date(d.getTime() + 60 * 60000);
+      if (key === '180') return new Date(d.getTime() + 180 * 60000);
+      if (key === 'eve') { var e = new Date(d); e.setHours(20, 0, 0, 0); if (e <= d) e.setDate(e.getDate() + 1); return e; }
+      if (key === 'morn') { var m = new Date(d); m.setDate(m.getDate() + 1); m.setHours(8, 0, 0, 0); return m; }
+      return null;
+    }
+    function openReminderSheet() {
+      var due = presetDue('60');
+      openSheet('<h3>Thêm lời nhắc ⏰</h3><div class="field"><label>VIỆC CẦN NHẮC</label><input class="input" id="task" maxlength="300" placeholder="Uống thuốc, gọi điện..."></div>'
+        + '<div class="field"><label>KHI NÀO</label><div class="chips" style="margin-top:0">'
+        + [['30', '30 phút'], ['60', '1 giờ'], ['180', '3 giờ'], ['eve', 'Tối 20:00'], ['morn', 'Sáng mai 8:00'], ['custom', 'Chọn giờ']].map(function (p) {
+          return '<button class="chip' + (p[0] === '60' ? ' sel' : '') + '" data-due="' + p[0] + '">' + p[1] + '</button>';
+        }).join('') + '</div><input class="input" id="customDue" type="datetime-local" style="margin-top:10px;display:none"></div>'
+        + '<div class="faint" id="dueText" style="font-size:12.5px;margin:-4px 0 16px"></div><button class="btn" id="saveBtn">Lưu lời nhắc</button>', function (root) {
+          var text = root.querySelector('#dueText'), custom = root.querySelector('#customDue'), task = root.querySelector('#task');
+          function show() { text.textContent = due ? 'Nhắc lúc ' + pad(due.getHours()) + ':' + pad(due.getMinutes()) + ' ngày ' + due.getDate() + '/' + (due.getMonth() + 1) : 'Chọn thời gian'; }
+          root.querySelectorAll('[data-due]').forEach(function (b) {
+            b.addEventListener('click', function () {
+              root.querySelectorAll('[data-due]').forEach(function (x) { x.classList.toggle('sel', x === b); });
+              haptic('select');
+              custom.style.display = b.dataset.due === 'custom' ? 'block' : 'none';
+              due = b.dataset.due === 'custom' ? (custom.value ? new Date(custom.value) : null) : presetDue(b.dataset.due);
+              show();
+            });
+          });
+          custom.addEventListener('change', function () { due = custom.value ? new Date(custom.value) : null; show(); });
+          show();
+          setTimeout(function () { task.focus(); }, 380);
+          root.querySelector('#saveBtn').addEventListener('click', function () {
+            if (!task.value.trim()) { task.focus(); haptic('warning'); return; }
+            if (!due) { haptic('warning'); return; }
+            act({ type: 'quick_reminder', task: task.value, dueAt: due.toISOString() }, 'Đã đặt lời nhắc').then(closeSheet).catch(function () {});
+          });
+        });
+    }
+    function openSnoozeSheet(id) {
+      openSheet('<h3>Hoãn lời nhắc</h3><div class="chips" style="margin-top:0">' + [[15, '15 phút'], [30, '30 phút'], [60, '1 giờ'], [180, '3 giờ']].map(function (p) {
+        return '<button class="chip" style="padding:12px 16px" data-min="' + p[0] + '">' + p[1] + '</button>';
+      }).join('') + '</div>', function (root) {
+        root.querySelectorAll('[data-min]').forEach(function (b) {
+          b.addEventListener('click', function () { act({ type: 'snooze_reminder', reminderId: Number(id), minutes: Number(b.dataset.min) }).then(closeSheet).catch(function () {}); });
+        });
+      });
+    }
+    function openTxSheet(id) {
+      var tx = plural(state.data.finances.recentExpenses).filter(function (x) { return String(x.id) === String(id); })[0];
+      if (!tx) return;
+      openSheet('<h3>' + esc(tx.description) + '</h3><div class="big-num money" style="font-size:28px;margin:-6px 0 4px">−' + vnd(tx.amount) + '<span class="unit">đ</span></div>'
+        + '<div class="faint" style="font-size:13px;margin-bottom:18px">' + esc(tx.date) + (tx.time ? ' · ' + esc(tx.time) : '') + '</div>'
+        + '<div class="field"><label>ĐỔI DANH MỤC</label>' + catGrid(tx.categoryKey) + '</div>'
+        + '<button class="btn danger" id="delBtn">Xóa khoản chi</button>', function (root) {
+          bindCatGrid(root, function (c) {
+            if (c === tx.categoryKey) return;
+            act({ type: 'recategorize_expense', expenseId: Number(id), category: c }, 'Đã đổi danh mục').then(closeSheet).catch(function () {});
+          });
+          root.querySelector('#delBtn').addEventListener('click', function () {
+            act({ type: 'delete_expense', expenseId: Number(id) }, 'Đã xóa ' + vndShort(tx.amount), {
+              undo: function () { act({ type: 'restore_expense', expenseId: Number(id) }, 'Đã khôi phục'); },
+            }).then(closeSheet).catch(function () {});
+          });
+        });
+    }
+    function openBudgetSheet() {
+      var b = (state.data.finances || {}).budget || {};
+      var catBudgets = plural(state.data.finances.categoryBudgets);
+      var pick = 'food';
+      openSheet('<h3>Ngân sách 🎯</h3><div class="field"><label>NGÂN SÁCH THÁNG</label><input class="input amount-input money" id="mAmt" inputmode="decimal" value="' + (b.amount ? vnd(b.amount) : '') + '" placeholder="VD: 8.000.000"></div>'
+        + '<button class="btn" id="saveMonthly" style="margin-bottom:22px">Lưu ngân sách tháng</button>'
+        + '<div class="field"><label>NGÂN SÁCH THEO DANH MỤC</label>' + catGrid(pick) + '<input class="input" id="cAmt" inputmode="decimal" style="margin-top:10px" placeholder="Số tiền/tháng · để 0 để tắt"></div>'
+        + '<div class="faint" id="catNow" style="font-size:12.5px;margin:-4px 0 14px"></div><button class="btn ghost" id="saveCat">Lưu ngân sách danh mục</button>', function (root) {
+          var cAmt = root.querySelector('#cAmt'), now = root.querySelector('#catNow');
+          function show() { var c = catBudgets.filter(function (x) { return x.category === pick; })[0]; now.textContent = c ? 'Hiện tại: ' + vnd(c.amount) + ' đ/tháng' : 'Chưa đặt ngân sách cho danh mục này'; }
+          bindCatGrid(root, function (c) { pick = c; show(); });
+          show();
+          root.querySelector('#saveMonthly').addEventListener('click', function () {
+            var v = parseAmount(root.querySelector('#mAmt').value);
+            if (!(v > 0)) { haptic('warning'); return; }
+            act({ type: 'set_budget', amount: v }, 'Đã lưu ngân sách tháng').then(closeSheet).catch(function () {});
+          });
+          root.querySelector('#saveCat').addEventListener('click', function () {
+            if (cAmt.value.trim() === '') { haptic('warning'); return; }
+            act({ type: 'set_budget', amount: parseAmount(cAmt.value), category: pick }).then(closeSheet).catch(function () {});
+          });
+        });
+    }
+
+    /* ---------- Toast ---------- */
+    var toastEl = document.getElementById('toast'), toastTimer = null;
+    function toast(text, isErr, undo) {
+      document.getElementById('toastText').textContent = text;
+      var btn = document.getElementById('toastAction');
+      btn.hidden = !undo;
+      btn.textContent = 'Hoàn tác';
+      btn.onclick = undo ? function () { hideToast(); undo(); } : null;
+      toastEl.classList.toggle('err', Boolean(isErr));
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(hideToast, undo ? 5000 : 2600);
+    }
+    function hideToast() { toastEl.classList.remove('show'); }
+
+    /* ---------- Pull to refresh ---------- */
+    (function pullToRefresh() {
+      var scroller = document.getElementById('scroller'), ptr = document.getElementById('ptr');
+      var y0 = null, pulled = 0;
+      scroller.addEventListener('touchstart', function (e) { y0 = scroller.scrollTop <= 0 ? e.touches[0].clientY : null; pulled = 0; }, { passive: true });
+      scroller.addEventListener('touchmove', function (e) {
+        if (y0 == null) return;
+        pulled = Math.max(0, Math.min(90, (e.touches[0].clientY - y0) * 0.5));
+        ptr.style.transition = 'none'; ptr.style.height = pulled + 'px';
+        ptr.querySelector('.dot').style.transform = 'rotate(' + pulled * 4 + 'deg)';
+      }, { passive: true });
+      scroller.addEventListener('touchend', function () {
+        if (y0 == null) return;
+        ptr.style.transition = '';
+        if (pulled > 60) { haptic('medium'); ptr.style.height = '44px'; ptr.querySelector('.dot').style.animation = 'spin .8s linear infinite';
+          loadData({ silent: true }).then(function () { ptr.style.height = '0'; ptr.querySelector('.dot').style.animation = ''; });
+        } else ptr.style.height = '0';
+        y0 = null;
+      });
+    })();
+
+    /* ---------- Boot ---------- */
+    syncBackButton();
     loadData();
+    setInterval(function () { if (!document.hidden && !state.sheetOpen) { updateHeader(); loadData({ silent: true }); } }, 60000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden && state.data) loadData({ silent: true }); });
   </script>
 </body>
 </html>
