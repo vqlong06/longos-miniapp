@@ -430,6 +430,25 @@
       background: rgba(56, 189, 248, 0.2);
       border-color: var(--accent);
     }
+    .btn-del-exp {
+      background: rgba(244, 63, 94, 0.08);
+      border: 1px solid rgba(244, 63, 94, 0.25);
+      color: var(--rose);
+      border-radius: 6px;
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.15s ease;
+    }
+    .btn-del-exp:active {
+      background: rgba(244, 63, 94, 0.3);
+      transform: scale(0.9);
+    }
 
     /* Heatmap Grid (GitHub style) */
     .heatmap-grid {
@@ -1348,8 +1367,9 @@
       if (!expenses || expenses.length === 0) return '';
       let listHtml = '';
       expenses.forEach(e => {
+        const safeDesc = (e.description || '').replace(/'/g, "\\'");
         listHtml += `
-          <div class="list-item">
+          <div class="list-item" id="expense-row-${e.id}">
             <div class="item-left">
               <div class="item-icon">${e.icon}</div>
               <div>
@@ -1357,7 +1377,10 @@
                 <div class="item-sub">${e.category} · ${e.date}</div>
               </div>
             </div>
-            <div class="item-amt privacy-blur">${fmtVnd(e.amount)}</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="item-amt privacy-blur">${fmtVnd(e.amount)}</div>
+              <button class="btn-del-exp" onclick="deleteExpenseItem(${e.id}, '${safeDesc}', ${e.amount})" title="Xóa khoản chi">✕</button>
+            </div>
           </div>
         `;
       });
@@ -1371,6 +1394,16 @@
           ${listHtml}
         </div>
       `;
+    }
+
+    async function deleteExpenseItem(id, desc, amt) {
+      if (!confirm(`Xác nhận xóa "${desc}" (${fmtVnd(amt)}) khỏi sổ chi tiêu?`)) return;
+      const row = document.getElementById(`expense-row-${id}`);
+      if (row) row.style.opacity = '0.3';
+      await postAction({
+        type: 'delete_expense',
+        expenseId: id,
+      });
     }
 
     // 3. TAB SỨC KHỎE (HEALTH & SLEEP)
