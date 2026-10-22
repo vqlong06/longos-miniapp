@@ -916,7 +916,12 @@
 
     // Telegram-signed session data; the server rejects requests without it.
     function authHeaders(extra) {
-      return Object.assign({ 'x-telegram-init-data': (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '' }, extra || {});
+      const wa = window.Telegram && window.Telegram.WebApp;
+      // Non-sensitive launch diagnostics so a refused session can be explained from the server log.
+      const diag = 'c=2;sdk=' + (wa ? 1 : 0) + ';plat=' + ((wa && wa.platform) || '-') + ';ver=' + ((wa && wa.version) || '-')
+        + ';init=' + ((wa && wa.initData) ? wa.initData.length : 0) + ';hash=' + (location.hash.indexOf('tgWebAppData') >= 0 ? 1 : 0)
+        + ';user=' + ((wa && wa.initDataUnsafe && wa.initDataUnsafe.user) ? 1 : 0);
+      return Object.assign({ 'x-telegram-init-data': (wa && wa.initData) || '', 'x-miniapp-diag': diag }, extra || {});
     }
 
     // Load Data
